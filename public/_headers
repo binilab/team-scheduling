@@ -1,0 +1,8 @@
+/robots.txt
+  Cache-Control: no-store
+
+/sitemap.xml
+  Cache-Control: no-store
+
+/sitemap-*.xml
+  Cache-Control: no-store
