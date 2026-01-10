@@ -4,6 +4,7 @@ import { useState, useRef, Fragment } from "react"
 import { Users, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useAppSettings } from "@/components/app-providers"
 
 const mockDays = ["월 13일", "화 14일", "수 15일"]
 const mockTimeSlots = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00"]
@@ -57,6 +58,27 @@ function getHeatColor(value: number) {
 }
 
 export function LivePreview() {
+  const { language } = useAppSettings()
+  const t =
+    language === "en"
+      ? {
+          title: "Live preview",
+          progress: "2/6 responses",
+          legend: "Availability count:",
+          legendHelp: "Darker means more people are available.",
+          bestTitle: "Top 3 picks",
+          people: "people",
+          available: "Available",
+        }
+      : {
+          title: "라이브 미리보기",
+          progress: "2/6명 입력 완료",
+          legend: "가능 인원 수:",
+          legendHelp: "색이 진할수록 그 시간에 가능한 인원이 많아요",
+          bestTitle: "베스트 후보 3개",
+          people: "명",
+          available: "가능",
+        }
   const [highlightedCell, setHighlightedCell] = useState<{ dayIndex: number; timeIndex: number } | null>(null)
   const cellRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const gridRef = useRef<HTMLDivElement>(null)
@@ -82,14 +104,14 @@ export function LivePreview() {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">라이브 미리보기</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t.title}</h2>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Users className="w-4 h-4" />
-          <span>2/6명 입력 완료</span>
+          <span>{t.progress}</span>
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-xl p-5 space-y-5">
+      <div className="bg-white/85 border border-white/70 rounded-2xl p-5 space-y-5 shadow-[0_20px_45px_rgba(15,23,42,0.1)] backdrop-blur dark:bg-slate-900/80 dark:border-slate-700/60">
         <TooltipProvider delayDuration={100}>
           <div className="overflow-x-auto" ref={gridRef}>
             <div className="min-w-[300px]">
@@ -128,7 +150,10 @@ export function LivePreview() {
                             />
                           </TooltipTrigger>
                           <TooltipContent side="top" className="text-xs">
-                            <div className="font-medium">가능 {count}명</div>
+                            <div className="font-medium">
+                              {t.available} {count}
+                              {t.people}
+                            </div>
                             <div className="text-muted-foreground text-[10px] max-w-[150px] truncate">
                               {mockParticipants[dayIndex][timeIndex]}
                             </div>
@@ -145,9 +170,11 @@ export function LivePreview() {
 
         <div className="space-y-1">
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <span className="text-foreground font-medium">가능 인원 수:</span>
+            <span className="text-foreground font-medium">{t.legend}</span>
             <div className="flex items-center gap-1">
-              <span>0명</span>
+              <span>
+                0{t.people}
+              </span>
               <div className="flex gap-0.5">
                 <div className="w-4 h-4 rounded bg-primary/20" />
                 <div className="w-4 h-4 rounded bg-primary/40" />
@@ -155,19 +182,19 @@ export function LivePreview() {
                 <div className="w-4 h-4 rounded bg-primary/80" />
                 <div className="w-4 h-4 rounded bg-primary" />
               </div>
-              <span>5명</span>
+              <span>
+                5{t.people}
+              </span>
             </div>
           </div>
-          <p className="text-[11px] text-muted-foreground/70 text-center">
-            색이 진할수록 그 시간에 가능한 인원이 많아요
-          </p>
+          <p className="text-[11px] text-muted-foreground/70 text-center">{t.legendHelp}</p>
         </div>
 
         {/* Best Time Candidates */}
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-foreground flex items-center gap-1.5">
             <Star className="w-4 h-4 text-accent" />
-            베스트 후보 3개
+            {t.bestTitle}
           </h3>
           <div className="flex flex-wrap gap-2">
             {bestTimes.map((item, index) => (
@@ -178,7 +205,10 @@ export function LivePreview() {
                 onClick={() => handleBestTimeClick(item.dayIndex, item.timeIndex)}
               >
                 {item.day} {item.time}
-                <span className="ml-1.5 text-xs text-muted-foreground">({item.score}명)</span>
+                <span className="ml-1.5 text-xs text-muted-foreground">
+                  ({item.score}
+                  {t.people})
+                </span>
               </Badge>
             ))}
           </div>

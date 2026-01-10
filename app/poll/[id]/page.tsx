@@ -10,6 +10,8 @@ import { AuthDialog } from "@/components/poll/auth-dialog"
 import { Loader2 } from "lucide-react"
 import { TimeGrid } from "@/components/poll/time-grid"
 import { Button } from "@/components/ui/button"
+import { useAppSettings } from "@/components/app-providers"
+import { formatDate, formatDateTime, getTimeZoneForLanguage } from "@/lib/date-format"
 
 // Types
 type PollData = {
@@ -22,6 +24,7 @@ type PollData = {
   duration: number
   slot_minutes?: number | null
   deadline?: string | null
+  timezone?: string | null
 }
 
 // Next.js 15+ 에서는 params가 Promise입니다.
@@ -30,6 +33,34 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
   const { id: pollId } = use(params)
   
   const router = useRouter() // router 선언 추가
+  const { language } = useAppSettings()
+  const t =
+    language === "en"
+      ? {
+          back: "Back",
+          missing: "This poll does not exist.",
+          viewResult: "View results →",
+          meeting: "min meeting",
+          deadline: "Deadline:",
+          closed: "(closed)",
+          needName: "Please enter your name.",
+        }
+      : {
+          back: "뒤로가기",
+          missing: "존재하지 않는 방입니다.",
+          viewResult: "결과 보기 →",
+          meeting: "분 회의",
+          deadline: "마감:",
+          closed: "(마감됨)",
+          needName: "이름 입력이 필요합니다.",
+        }
+  const safeBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back()
+    } else {
+      router.push("/")
+    }
+  }
   const [poll, setPoll] = useState<PollData | null>(null)
   const [loading, setLoading] = useState(true)
   const [participantId, setParticipantId] = useState<string | null>(null)
@@ -76,10 +107,11 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
   }
 
   if (!poll) {
-    return <div className="p-8 text-center">존재하지 않는 방입니다.</div>
+    return <div className="p-8 text-center">{t.missing}</div>
   }
 
   const deadline = poll.deadline ? new Date(poll.deadline) : null
+  const timeZone = poll.timezone ?? getTimeZoneForLanguage(language)
   const isClosed = deadline ? Date.now() > deadline.getTime() : false
 
   return (
@@ -93,22 +125,22 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
       {/* 헤더 */}
       <header className="border-b px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-2 w-fit">
-            ← 뒤로가기
+          <Button variant="ghost" size="sm" onClick={safeBack} className="mb-2 w-fit">
+            ← {t.back}
           </Button>
           <h1 className="text-2xl font-bold">{poll.title}</h1>
           <p className="text-sm text-muted-foreground">
-            {poll.start_date} ~ {poll.end_date} | {poll.duration}분 회의
+            {formatDate(poll.start_date, language, timeZone)} ~{" "}
+            {formatDate(poll.end_date, language, timeZone)} | {poll.duration}
+            {t.meeting}
           </p>
           {deadline && (
             <p className="text-xs text-muted-foreground mt-1">
-              마감: {deadline.toLocaleString()} {isClosed ? "(마감됨)" : ""}
+              {t.deadline} {formatDateTime(deadline, language, timeZone)} {isClosed ? t.closed : ""}
             </p>
           )}
         </div>
-        <Button onClick={() => router.push(`/poll/${pollId}/result`)}>
-          결과 보기 →
-        </Button>
+        <Button onClick={() => router.push(`/poll/${pollId}/result`)}>{t.viewResult}</Button>
       </header>
 
       {/* 메인 컨텐츠 영역 (그리드 들어갈 곳) */}
@@ -116,7 +148,7 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
         {participantId ? (
           <TimeGrid poll={poll} participantId={participantId} isClosed={isClosed} />
         ) : (
-          <div className="py-20 text-center">이름 입력이 필요합니다.</div>
+          <div className="py-20 text-center">{t.needName}</div>
         )}
       </main>
     </div>

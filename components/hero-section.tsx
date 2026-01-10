@@ -12,6 +12,7 @@ import {
   Link2,
   Copy,
   Check,
+  Loader2,
   Sparkles,
   ChevronLeft,
   ChevronRight,
@@ -23,6 +24,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
+import { useAppSettings } from "@/components/app-providers"
+import {
+  formatDateTimeInput,
+  formatMonthDay,
+  getTimeZoneForLanguage,
+  parseDateTimeInput,
+  zonedTimeToUtc,
+} from "@/lib/date-format"
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"]
 const MONTHS = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
@@ -33,11 +42,6 @@ function getDaysInMonth(year: number, month: number) {
 
 function getFirstDayOfMonth(year: number, month: number) {
   return new Date(year, month, 1).getDay()
-}
-
-function formatDate(date: Date | null) {
-  if (!date) return ""
-  return `${date.getMonth() + 1}/${date.getDate()}`
 }
 
 function isSameDay(a: Date | null, b: Date | null) {
@@ -52,6 +56,9 @@ function isInRange(date: Date, start: Date | null, end: Date | null) {
 
 export function HeroSection() {
   const router = useRouter()
+  const { language } = useAppSettings()
+  const timeZone = getTimeZoneForLanguage(language)
+  const formatDateLabel = (date: Date | null) => (date ? formatMonthDay(date, language, timeZone) : "")
   const [isLoading, setIsLoading] = useState(false)
   const [isCreated, setIsCreated] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -68,21 +75,117 @@ export function HeroSection() {
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(initialStart)
   const [showQR, setShowQR] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [qrLoading, setQrLoading] = useState(false)
+  const [qrError, setQrError] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState("10-22")
   const [slotMinutes, setSlotMinutes] = useState("30")
   const [meetingMinutes, setMeetingMinutes] = useState("60")
   const [deadlineLocal, setDeadlineLocal] = useState("")
   const [deadlineTouched, setDeadlineTouched] = useState(false)
 
+  const t =
+    language === "en"
+      ? {
+          badge: "Start without signup",
+          headlineTop: "Team schedules,",
+          headlineHighlight: "done in 1 minute",
+          headlineBottom: "",
+          subcopy: "Share a link → everyone checks availability → best time is auto-picked.",
+          subcopyLine2: "No more back-and-forth in chat.",
+          titleLabel: "Schedule title",
+          titleOptional: "(optional)",
+          titlePlaceholderPrefix: 'Auto title if empty: "',
+          dateLabel: "Date range",
+          datePlaceholder: "Select start and end dates",
+          dateDays: "days",
+          quickThisWeek: "This week",
+          quickNextWeek: "Next week",
+          quickNext3: "Next 3 days",
+          quickWeekend: "Weekend only",
+          pickStart: "Select a start date",
+          pickEnd: "Select an end date",
+          timeRangeLabel: "Time range",
+          slotLabel: "Slot size",
+          deadlineLabel: "Deadline",
+          deadlineHint: "Edits are locked after the deadline.",
+          durationLabel: "Meeting length",
+          create: "Create link",
+          creating: "Creating...",
+          createdTitle: "Link is ready!",
+          createdDesc: "Share it with your team",
+          copied: "Link copied!",
+          copy: "Copy",
+          kakao: "Kakao",
+          qr: "QR",
+          qrError: "Failed to generate QR code.",
+          kakaoError: "Kakao share is not ready. Check the Kakao JS key.",
+          ctaHint: "Share it and fill in your own availability too",
+          cta: "Enter my availability",
+          reset: "Create another poll",
+          backToEdit: "Back to edit",
+          weekCountSuffix: "days",
+          dateError: "Please select a date range.",
+          createSuccess: "Link created!",
+          createError: "Failed to create the poll.",
+        }
+      : {
+          badge: "가입 없이 바로 시작",
+          headlineTop: "팀플 시간,",
+          headlineHighlight: "1분이면",
+          headlineBottom: "정리 끝",
+          subcopy: "링크 공유 → 각자 가능한 시간 체크 → 자동으로 베스트 시간 추천.",
+          subcopyLine2: "더 이상 카톡으로 시간 물어보지 마세요",
+          titleLabel: "일정 제목",
+          titleOptional: "(선택)",
+          titlePlaceholderPrefix: '비워두면 "',
+          dateLabel: "날짜 선택",
+          datePlaceholder: "시작일 ~ 종료일을 선택하세요",
+          dateDays: "일간",
+          quickThisWeek: "이번 주",
+          quickNextWeek: "다음 주",
+          quickNext3: "다음 3일",
+          quickWeekend: "주말만",
+          pickStart: "시작일을 선택하세요",
+          pickEnd: "종료일을 선택하세요",
+          timeRangeLabel: "시간대",
+          slotLabel: "슬롯 단위",
+          deadlineLabel: "마감 시간",
+          deadlineHint: "입력 마감 이후에는 수정이 잠깁니다.",
+          durationLabel: "회의 길이",
+          create: "링크 만들기",
+          creating: "생성 중...",
+          createdTitle: "링크 생성 완료!",
+          createdDesc: "팀원들에게 공유하세요",
+          copied: "링크 복사됨!",
+          copy: "복사",
+          kakao: "카톡",
+          qr: "QR",
+          qrError: "QR 생성에 실패했습니다.",
+          kakaoError: "카카오 공유가 준비되지 않았습니다. Kakao JS 키를 확인해주세요.",
+          ctaHint: "팀원에게 던지고, 본인도 가능 시간 체크하러 가요",
+          cta: "내 시간 입력하기",
+          reset: "새 일정 투표 만들기",
+          backToEdit: "뒤로가기",
+          weekCountSuffix: "일간",
+          dateError: "날짜 범위를 선택해주세요.",
+          createSuccess: "링크가 생성되었습니다!",
+          createError: "방 생성 중 오류가 발생했습니다.",
+        }
+
   useEffect(() => {
     if (!endDate || deadlineTouched) return
-    const deadline = new Date(endDate)
-    deadline.setHours(23, 59, 0, 0)
-    const localValue = new Date(deadline.getTime() - deadline.getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 16)
-    setDeadlineLocal(localValue)
-  }, [endDate, deadlineTouched])
+    const parts = {
+      year: endDate.getFullYear(),
+      month: endDate.getMonth() + 1,
+      day: endDate.getDate(),
+      hour: 23,
+      minute: 59,
+      second: 0,
+    }
+    const deadlineUtc = zonedTimeToUtc(parts, timeZone)
+    setDeadlineLocal(formatDateTimeInput(deadlineUtc, timeZone))
+  }, [endDate, deadlineTouched, timeZone])
 
   const handleQuickSelect = (type: "thisWeek" | "nextWeek" | "next3days" | "weekend") => {
     const base = new Date()
@@ -158,7 +261,7 @@ export function HeroSection() {
 
   const handleCreate = async () => {
     if (!startDate || !endDate) {
-      toast.error("날짜 범위를 선택해주세요.")
+      toast.error(t.dateError)
       return
     }
 
@@ -166,14 +269,40 @@ export function HeroSection() {
       setIsLoading(true)
       const title = pollTitle.trim() || getAutoTitle()
       const { startTime, endTime } = parseTimeRange(timeRange)
+      const startDateUtc = zonedTimeToUtc(
+        {
+          year: startDate.getFullYear(),
+          month: startDate.getMonth() + 1,
+          day: startDate.getDate(),
+          hour: 0,
+          minute: 0,
+          second: 0,
+        },
+        timeZone,
+      )
+      const endDateUtc = zonedTimeToUtc(
+        {
+          year: endDate.getFullYear(),
+          month: endDate.getMonth() + 1,
+          day: endDate.getDate(),
+          hour: 0,
+          minute: 0,
+          second: 0,
+        },
+        timeZone,
+      )
+      const deadlineParts = deadlineLocal ? parseDateTimeInput(deadlineLocal) : null
+      const deadlineUtc = deadlineParts ? zonedTimeToUtc(deadlineParts, timeZone) : null
+
       const payload = {
         title,
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
+        start_date: startDateUtc.toISOString(),
+        end_date: endDateUtc.toISOString(),
         duration: parseInt(meetingMinutes, 10),
         start_time: startTime,
         end_time: endTime,
-        deadline: deadlineLocal ? new Date(deadlineLocal).toISOString() : null,
+        deadline: deadlineUtc ? deadlineUtc.toISOString() : null,
+        timezone: timeZone,
       }
 
       let { data, error } = await supabase
@@ -182,11 +311,12 @@ export function HeroSection() {
         .select()
         .single()
 
-      if (error && /slot_minutes|deadline|column/i.test(error.message)) {
+      if (error && /slot_minutes|deadline|timezone|column/i.test(error.message)) {
         const fallbackPayload = {
           ...payload,
         }
         delete (fallbackPayload as { deadline?: string | null }).deadline
+        delete (fallbackPayload as { timezone?: string }).timezone
         ;({ data, error } = await supabase.from("polls").insert([fallbackPayload]).select().single())
       }
 
@@ -198,10 +328,10 @@ export function HeroSection() {
       setPollLink(link)
       localStorage.setItem(`poll:${data.id}:slotMinutes`, slotMinutes)
       setIsCreated(true)
-      toast.success("링크가 생성되었습니다!")
+      toast.success(t.createSuccess)
     } catch (error) {
       console.error(error)
-      toast.error("방 생성 중 오류가 발생했습니다.")
+      toast.error(t.createError)
     } finally {
       setIsLoading(false)
     }
@@ -214,8 +344,56 @@ export function HeroSection() {
   }
 
   const handleKakaoShare = () => {
-    // 실제 구현 시 Kakao SDK 사용
-    window.open(`https://sharer.kakao.com/talk/friends/picker/link?url=${encodeURIComponent(pollLink)}`, "_blank")
+    if (!pollLink) return
+    const shareFallback = `https://sharer.kakao.com/talk/friends/picker/link?url=${encodeURIComponent(pollLink)}`
+    const kakaoJsKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY
+    if (!kakaoJsKey) {
+      toast.error(t.kakaoError)
+      window.open(shareFallback, "_blank")
+      return
+    }
+
+    const Kakao = (window as typeof window & { Kakao?: any }).Kakao
+    if (!Kakao) {
+      toast.error(t.kakaoError)
+      window.open(shareFallback, "_blank")
+      return
+    }
+
+    if (!Kakao.isInitialized()) {
+      Kakao.init(kakaoJsKey)
+    }
+
+    try {
+      Kakao.Share.sendDefault({
+        objectType: "feed",
+        content: {
+          title: language === "en" ? "Timepoll invite" : "타임폴 초대",
+          description:
+            language === "en"
+              ? "Pick your availability and find the best time."
+              : "가능한 시간을 선택하고 최적의 시간을 찾아요.",
+          imageUrl: `${window.location.origin}/placeholder.jpg`,
+          link: {
+            mobileWebUrl: pollLink,
+            webUrl: pollLink,
+          },
+        },
+        buttons: [
+          {
+            title: language === "en" ? "Open poll" : "투표 열기",
+            link: {
+              mobileWebUrl: pollLink,
+              webUrl: pollLink,
+            },
+          },
+        ],
+      })
+    } catch (error) {
+      console.error(error)
+      toast.error(t.kakaoError)
+      window.open(shareFallback, "_blank")
+    }
   }
 
   const handleReset = () => {
@@ -227,11 +405,58 @@ export function HeroSection() {
     setDeadlineTouched(false)
   }
 
+  useEffect(() => {
+    if (!isCreated || typeof window === "undefined") return
+    window.history.pushState({ stage: "created" }, "")
+    const handlePopState = () => {
+      handleReset()
+    }
+    window.addEventListener("popstate", handlePopState)
+    return () => window.removeEventListener("popstate", handlePopState)
+  }, [isCreated])
+
+  useEffect(() => {
+    if (!showQR || !pollLink) return
+    let active = true
+    setQrLoading(true)
+    setQrError(null)
+    import("qrcode")
+      .then(({ toDataURL }) =>
+        toDataURL(pollLink, {
+          width: 240,
+          margin: 1,
+          color: {
+            dark: "#0f172a",
+            light: "#ffffff",
+          },
+        }),
+      )
+      .then((url) => {
+        if (!active) return
+        setQrDataUrl(url)
+      })
+      .catch((error) => {
+        console.error(error)
+        if (!active) return
+        setQrError(t.qrError)
+      })
+      .finally(() => {
+        if (!active) return
+        setQrLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [showQR, pollLink])
+
   const getAutoTitle = () => {
     if (startDate) {
-      return `팀플 회의 (${startDate.getMonth() + 1}/${startDate.getDate()})`
+      return language === "en"
+        ? `Team meeting (${startDate.getMonth() + 1}/${startDate.getDate()})`
+        : `팀플 회의 (${startDate.getMonth() + 1}/${startDate.getDate()})`
     }
-    return "팀플 회의 일정"
+    return language === "en" ? "Team meeting schedule" : "팀플 회의 일정"
   }
 
   const renderCalendarMonth = (monthDate: Date) => {
@@ -285,32 +510,33 @@ export function HeroSection() {
     <section className="space-y-6">
       {/* Hero Text */}
       <div className="space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[linear-gradient(120deg,rgba(49,130,246,0.16),rgba(56,189,248,0.12))] text-primary rounded-full text-sm font-medium border border-primary/10">
           <Sparkles className="w-4 h-4" />
-          <span>가입 없이 바로 시작</span>
+          <span>{t.badge}</span>
         </div>
-        <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground text-balance">
-          팀플 시간,
+        <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight text-foreground text-balance">
+          {t.headlineTop}
           <br />
-          <span className="text-primary">1분이면</span> 정리 끝
+          <span className="text-primary">{t.headlineHighlight}</span> {t.headlineBottom}
         </h1>
         <p className="text-lg text-muted-foreground max-w-lg">
-          링크 공유 → 각자 가능한 시간 체크 → 자동으로 베스트 시간 추천.
-          <br />더 이상 카톡으로 시간 물어보지 마세요
+          {t.subcopy}
+          <br />
+          {t.subcopyLine2}
         </p>
       </div>
 
       {/* Poll Creation Form */}
-      <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+      <div className="bg-white/85 border border-white/70 rounded-3xl p-6 shadow-[0_24px_60px_rgba(15,23,42,0.12)] backdrop-blur dark:bg-slate-900/80 dark:border-slate-700/60">
         {!isCreated ? (
           <div className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="poll-title" className="text-sm font-medium">
-                일정 제목 <span className="text-muted-foreground font-normal">(선택)</span>
+                {t.titleLabel} <span className="text-muted-foreground font-normal">{t.titleOptional}</span>
               </Label>
               <Input
                 id="poll-title"
-                placeholder={`비워두면 "${getAutoTitle()}"로 자동 생성`}
+                placeholder={`${t.titlePlaceholderPrefix}${getAutoTitle()}"`}
                 className="h-11"
                 value={pollTitle}
                 onChange={(e) => setPollTitle(e.target.value)}
@@ -320,20 +546,21 @@ export function HeroSection() {
             <div className="space-y-2">
               <Label className="text-sm font-medium flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
-                날짜 선택
+                {t.dateLabel}
               </Label>
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full h-11 justify-start text-left font-normal bg-transparent">
                     {startDate && endDate ? (
                       <span>
-                        {startDate.getMonth() + 1}/{startDate.getDate()} ~ {endDate.getMonth() + 1}/{endDate.getDate()}
+                        {formatDateLabel(startDate)} ~ {formatDateLabel(endDate)}
                         <span className="text-muted-foreground ml-2">
-                          ({Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1}일간)
+                          ({Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1}
+                          {t.weekCountSuffix})
                         </span>
                       </span>
                     ) : (
-                      <span className="text-muted-foreground">시작일 ~ 종료일을 선택하세요</span>
+                      <span className="text-muted-foreground">{t.datePlaceholder}</span>
                     )}
                   </Button>
                 </PopoverTrigger>
@@ -346,7 +573,7 @@ export function HeroSection() {
                       onClick={() => handleQuickSelect("thisWeek")}
                       className="text-xs bg-transparent"
                     >
-                      이번 주
+                      {t.quickThisWeek}
                     </Button>
                     <Button
                       size="sm"
@@ -354,7 +581,7 @@ export function HeroSection() {
                       onClick={() => handleQuickSelect("nextWeek")}
                       className="text-xs bg-transparent"
                     >
-                      다음 주
+                      {t.quickNextWeek}
                     </Button>
                     <Button
                       size="sm"
@@ -362,7 +589,7 @@ export function HeroSection() {
                       onClick={() => handleQuickSelect("next3days")}
                       className="text-xs bg-transparent"
                     >
-                      다음 3일
+                      {t.quickNext3}
                     </Button>
                     <Button
                       size="sm"
@@ -370,13 +597,13 @@ export function HeroSection() {
                       onClick={() => handleQuickSelect("weekend")}
                       className="text-xs bg-transparent"
                     >
-                      주말만
+                      {t.quickWeekend}
                     </Button>
                   </div>
 
                   {/* 선택 상태 표시 */}
                   <div className="text-xs text-muted-foreground mb-3 text-center">
-                    {selectingStart ? "시작일을 선택하세요" : "종료일을 선택하세요"}
+                    {selectingStart ? t.pickStart : t.pickEnd}
                   </div>
 
                   {/* 2개월 뷰 캘린더 */}
@@ -416,7 +643,7 @@ export function HeroSection() {
               <div className="space-y-2">
                 <Label className="text-sm font-medium flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-muted-foreground" />
-                  시간대
+                  {t.timeRangeLabel}
                 </Label>
                 <Select value={timeRange} onValueChange={setTimeRange}>
                   <SelectTrigger className="h-11">
@@ -430,7 +657,7 @@ export function HeroSection() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium">슬롯 단위</Label>
+                <Label className="text-sm font-medium">{t.slotLabel}</Label>
                 <Select value={slotMinutes} onValueChange={setSlotMinutes}>
                   <SelectTrigger className="h-11">
                     <SelectValue />
@@ -444,7 +671,7 @@ export function HeroSection() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium">마감 시간</Label>
+              <Label className="text-sm font-medium">{t.deadlineLabel}</Label>
               <Input
                 type="datetime-local"
                 className="h-11"
@@ -454,11 +681,11 @@ export function HeroSection() {
                   setDeadlineTouched(true)
                 }}
               />
-              <p className="text-xs text-muted-foreground">입력 마감 이후에는 수정이 잠깁니다.</p>
+              <p className="text-xs text-muted-foreground">{t.deadlineHint}</p>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium">회의 길이</Label>
+              <Label className="text-sm font-medium">{t.durationLabel}</Label>
               <Select value={meetingMinutes} onValueChange={setMeetingMinutes}>
                 <SelectTrigger className="h-11">
                   <SelectValue />
@@ -477,31 +704,31 @@ export function HeroSection() {
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    생성 중...
+                    {t.creating}
                   </span>
                 ) : (
-                  "링크 만들기"
+                  t.create
                 )}
-              </Button>
-              <Button variant="outline" className="h-12 px-6 bg-transparent">
-                샘플 보기
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-5 py-2">
+            <Button variant="ghost" onClick={handleReset} className="w-fit px-0 text-muted-foreground">
+              ← {t.backToEdit}
+            </Button>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center shrink-0">
                 <Check className="w-6 h-6 text-accent" />
               </div>
               <div className="text-left">
-                <h3 className="text-lg font-semibold">링크 생성 완료!</h3>
-                <p className="text-sm text-muted-foreground">팀원들에게 공유하세요</p>
+                <h3 className="text-lg font-semibold">{t.createdTitle}</h3>
+                <p className="text-sm text-muted-foreground">{t.createdDesc}</p>
               </div>
             </div>
 
             {/* 링크 복사 영역 */}
-            <div className="flex items-center gap-2 p-3 bg-secondary rounded-lg">
+            <div className="flex items-center gap-2 p-3 bg-white/70 border border-white/70 rounded-xl shadow-[0_10px_30px_rgba(15,23,42,0.08)] dark:bg-slate-900/70 dark:border-slate-700/60">
               <Link2 className="w-5 h-5 text-muted-foreground shrink-0" />
               <span className="text-sm font-mono truncate flex-1">{pollLink}</span>
               <Button size="sm" variant="ghost" onClick={handleCopy} className="shrink-0">
@@ -512,7 +739,7 @@ export function HeroSection() {
             {/* 토스트 스타일 복사 확인 */}
             {copied && (
               <div className="text-sm text-accent text-center font-medium animate-in fade-in slide-in-from-bottom-2">
-                링크 복사됨!
+                {t.copied}
               </div>
             )}
 
@@ -520,40 +747,55 @@ export function HeroSection() {
             <div className="grid grid-cols-3 gap-2">
               <Button onClick={handleCopy} variant="outline" className="h-11 bg-transparent">
                 <Copy className="w-4 h-4 mr-2" />
-                복사
+                {t.copy}
               </Button>
               <Button onClick={handleKakaoShare} className="h-11 bg-[#FEE500] hover:bg-[#FEE500]/90 text-[#391B1B]">
                 <MessageCircle className="w-4 h-4 mr-2" />
-                카톡
+                {t.kakao}
               </Button>
-              <Button onClick={() => setShowQR(!showQR)} variant="outline" className="h-11 bg-transparent">
+              <Button
+                onClick={() => setShowQR(!showQR)}
+                variant="outline"
+                className="h-11 bg-white/70 dark:bg-slate-900/60"
+                aria-expanded={showQR}
+              >
                 <QrCode className="w-4 h-4 mr-2" />
-                QR
+                {t.qr}
               </Button>
             </div>
 
             {/* QR 코드 (토글) */}
             {showQR && (
-              <div className="flex justify-center p-4 bg-white rounded-lg">
-                <div className="w-32 h-32 bg-foreground/10 rounded flex items-center justify-center text-xs text-muted-foreground">
-                  [QR Code]
-                </div>
+              <div className="flex justify-center p-4 bg-white/80 border border-white/70 rounded-xl dark:bg-slate-900/70 dark:border-slate-700/60">
+                {qrLoading ? (
+                  <div className="h-40 w-40 flex items-center justify-center text-muted-foreground">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
+                ) : qrError ? (
+                  <div className="text-xs text-destructive">{qrError}</div>
+                ) : (
+                  qrDataUrl && (
+                    <img
+                      src={qrDataUrl}
+                      alt="QR code"
+                      className="h-40 w-40 rounded-lg border border-white/80"
+                    />
+                  )
+                )}
               </div>
             )}
 
             {/* 내 시간 입력하기 CTA */}
             <div className="pt-2 border-t border-border">
-              <p className="text-sm text-muted-foreground text-center mb-3">
-                팀원에게 던지고, 본인도 가능 시간 체크하러 가요
-              </p>
+              <p className="text-sm text-muted-foreground text-center mb-3">{t.ctaHint}</p>
               <Button className="w-full h-11" variant="secondary" onClick={() => router.push(`/poll/${pollId}`)}>
-                내 시간 입력하기
+                {t.cta}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
 
             <Button variant="ghost" onClick={handleReset} className="w-full text-muted-foreground">
-              새 일정 투표 만들기
+              {t.reset}
             </Button>
           </div>
         )}

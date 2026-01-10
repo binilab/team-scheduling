@@ -6,6 +6,7 @@ import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowRight, Link2, Clipboard } from "lucide-react"
+import { useAppSettings } from "@/components/app-providers"
 
 function extractPollCode(input: string): string {
   // Remove whitespace
@@ -35,6 +36,25 @@ function extractPollCode(input: string): string {
 }
 
 export function JoinPollCard() {
+  const { language } = useAppSettings()
+  const t =
+    language === "en"
+      ? {
+          title: "Join by link",
+          desc: "Paste a link or code",
+          clipboard: "Link found in clipboard.",
+          clipboardAction: "Paste",
+          placeholder: "Link or code (e.g. abc123)",
+          hint: "No login needed — just enter your name",
+        }
+      : {
+          title: "링크로 바로 참여",
+          desc: "받은 링크나 코드를 입력하세요",
+          clipboard: "클립보드에 링크가 있어요.",
+          clipboardAction: "붙여넣기",
+          placeholder: "링크 또는 코드 (예: abc123)",
+          hint: "가입 없이 이름만 입력하면 돼요",
+        }
   const [pollCode, setPollCode] = useState("")
   const [showClipboardHint, setShowClipboardHint] = useState(false)
   const [clipboardContent, setClipboardContent] = useState("")
@@ -80,23 +100,23 @@ export function JoinPollCard() {
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+    <div className="bg-white/85 border border-white/70 rounded-2xl p-5 space-y-4 shadow-[0_20px_45px_rgba(15,23,42,0.1)] backdrop-blur dark:bg-slate-900/80 dark:border-slate-700/60">
       <div className="space-y-1">
         <h3 className="font-semibold text-foreground flex items-center gap-2">
           <Link2 className="w-4 h-4 text-primary" />
-          링크로 바로 참여
+          {t.title}
         </h3>
-        <p className="text-sm text-muted-foreground">받은 링크나 코드를 입력하세요</p>
+        <p className="text-sm text-muted-foreground">{t.desc}</p>
       </div>
 
       {showClipboardHint && (
         <button
           onClick={handlePasteFromClipboard}
-          className="w-full flex items-center gap-2 p-2.5 bg-primary/10 hover:bg-primary/15 border border-primary/20 rounded-lg transition-colors text-left"
+          className="w-full flex items-center gap-2 p-2.5 bg-[linear-gradient(120deg,rgba(49,130,246,0.12),rgba(56,189,248,0.1))] hover:bg-primary/15 border border-primary/15 rounded-xl transition-colors text-left dark:border-primary/30"
         >
           <Clipboard className="w-4 h-4 text-primary shrink-0" />
           <span className="text-sm text-foreground">
-            클립보드에 링크가 있어요. <span className="text-primary font-medium">붙여넣기</span>
+            {t.clipboard} <span className="text-primary font-medium">{t.clipboardAction}</span>
           </span>
         </button>
       )}
@@ -104,7 +124,7 @@ export function JoinPollCard() {
       <div className="flex gap-2">
         <Input
           ref={inputRef}
-          placeholder="링크 또는 코드 (예: abc123)"
+          placeholder={t.placeholder}
           value={pollCode}
           onChange={handleInputChange}
           onFocus={handleFocus}
@@ -116,7 +136,7 @@ export function JoinPollCard() {
         </Button>
       </div>
 
-      <p className="text-xs text-muted-foreground">가입 없이 이름만 입력하면 돼요</p>
+      <p className="text-xs text-muted-foreground">{t.hint}</p>
     </div>
   )
 }

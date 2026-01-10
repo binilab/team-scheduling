@@ -1,12 +1,21 @@
 "use client"
 
 import { useMemo, Fragment } from "react"
-import { format, addDays, parseISO, addMinutes } from "date-fns"
-import { ko } from "date-fns/locale"
+import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Star, Users } from "lucide-react"
+import { useAppSettings } from "@/components/app-providers"
+import {
+  addDaysToYmd,
+  formatMonthDayWeekday,
+  formatMonthDayWeekdayTime,
+  formatYearMonthDay,
+  getTimeZoneForLanguage,
+  zonedDateFromYmd,
+  zonedDateFromYmdTime,
+} from "@/lib/date-format"
 
 interface HeatmapProps {
   poll: {
@@ -17,6 +26,7 @@ interface HeatmapProps {
     end_time: string
     duration: number
     slot_minutes?: number | null
+    timezone?: string | null
   }
   participants: {
     id: string
@@ -32,17 +42,35 @@ interface HeatmapProps {
 }
 
 export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
+  const { language } = useAppSettings()
+  const timeZone = poll.timezone ?? getTimeZoneForLanguage(language)
+  const t =
+    language === "en"
+      ? {
+          rank: "Pick",
+          best: "Best picks",
+          minPeople: "min people available",
+          overview: "Availability overview",
+          score: "score",
+        }
+      : {
+          rank: "순위 추천",
+          best: "베스트 추천",
+          minPeople: "최소 참여 가능",
+          overview: "전체 가능 시간 현황",
+          score: "점",
+        }
   
   // 1. 데이터 가공 및 점수 계산 로직
   const { timeSlots, days, scoreMap, maxScore, bestSlots } = useMemo(() => {
     // 날짜/시간 축 생성
-    const startDate = parseISO(poll.start_date)
-    const endDate = parseISO(poll.end_date)
-    const days = []
-    let curr = startDate
-    while (curr <= endDate) {
+    const startDateKey = formatYearMonthDay(poll.start_date, language, timeZone)
+    const endDateKey = formatYearMonthDay(poll.end_date, language, timeZone)
+    const days: string[] = []
+    let curr = startDateKey
+    while (curr <= endDateKey) {
       days.push(curr)
-      curr = addDays(curr, 1)
+      curr = addDaysToYmd(curr, 1)
     }
 
     const storedSlotMinutes =
@@ -78,10 +106,10 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
 
     // 베스트 시간 추천 알고리즘 (연속된 시간 찾기)
     const requiredSlots = Math.ceil(poll.duration / slotMinutes)
-    const candidates: { start: string; score: number; count: number }[] = []
+    const candidates: { date: string; time: string; score: number; count: number }[] = []
 
     days.forEach(day => {
-      const dateStr = format(day, 'yyyy-MM-dd')
+      const dateStr = day
       for (let i = 0; i <= timeSlots.length - requiredSlots; i++) {
         let currentIntervalScore = 0
         let minCount = 999
@@ -100,7 +128,8 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
 
         if (valid) {
           candidates.push({
-            start: `${dateStr} ${timeSlots[i]}`, // 시작 시간
+            date: dateStr,
+            time: timeSlots[i],
             score: currentIntervalScore,
             count: minCount
           })
@@ -113,7 +142,7 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
     const bestSlots = candidates.slice(0, 3)
 
     return { timeSlots, days, scoreMap, maxScore, bestSlots }
-  }, [poll, participants, availabilities])
+  }, [poll, participants, availabilities, language, timeZone])
 
   // 색상 농도 유틸
   const getOpacity = (score: number) => {
@@ -133,17 +162,18 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
             <Card key={index} className={cn("border-2", index === 0 ? "border-primary" : "")}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex justify-between">
-                  {index + 1}순위 추천
+                  {index + 1}
+                  {t.rank}
                   {index === 0 && <Star className="h-4 w-4 fill-primary text-primary" />}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {format(new Date(slot.start), 'M/d (E) HH:mm', { locale: ko })}
+                  {formatMonthDayWeekdayTime(zonedDateFromYmdTime(slot.date, slot.time, timeZone), language, timeZone)}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1 flex items-center">
                   <Users className="h-3 w-3 mr-1" />
-                  최소 {slot.count}명 참여 가능
+                  {t.minPeople} {slot.count}
                 </div>
               </CardContent>
             </Card>
@@ -152,14 +182,14 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
       )}
 
       {/* 히트맵 그리드 */}
-      <div className="rounded-md border p-4 bg-white/50 overflow-x-auto">
-        <h3 className="font-semibold mb-4">전체 가능 시간 현황</h3>
+      <div className="rounded-md border p-4 bg-white/50 overflow-x-auto dark:bg-slate-900/60 dark:border-slate-700/60">
+        <h3 className="font-semibold mb-4">{t.overview}</h3>
         <div className="grid" style={{ gridTemplateColumns: `auto repeat(${days.length}, minmax(80px, 1fr))` }}>
            {/* 헤더 */}
            <div className="p-2"></div>
            {days.map(d => (
-             <div key={d.toString()} className="text-center p-2 text-sm font-medium border-b">
-               {format(d, 'M/d (E)', { locale: ko })}
+             <div key={d} className="text-center p-2 text-sm font-medium border-b">
+               {formatMonthDayWeekday(zonedDateFromYmd(d, timeZone), language, timeZone)}
              </div>
            ))}
 
@@ -168,7 +198,7 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
              <Fragment key={time}>
                 <div className="text-xs text-right p-2 text-muted-foreground">{time}</div>
                 {days.map(d => {
-                  const key = `${format(d, 'yyyy-MM-dd')}_${time}`
+                  const key = `${d}_${time}`
                   const score = scoreMap[key] || 0
                   return (
                     <div 
@@ -178,7 +208,8 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
                     >
                       {score > 0 && (
                          <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-10 pointer-events-none">
-                           {score}점
+                           {score}
+                           {t.score}
                          </div>
                       )}
                     </div>

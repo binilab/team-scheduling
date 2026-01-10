@@ -1,13 +1,21 @@
 "use client"
 
 import { useState, useRef, useEffect, Fragment } from "react"
-import { addDays, format, isSameDay, parseISO, startOfDay, addMinutes } from "date-fns"
-import { ko } from "date-fns/locale"
+import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Loader2, Save } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
+import { useAppSettings } from "@/components/app-providers"
+import {
+  addDaysToYmd,
+  formatMonthDay,
+  formatWeekday,
+  formatYearMonthDay,
+  getTimeZoneForLanguage,
+  zonedDateFromYmd,
+} from "@/lib/date-format"
 
 interface TimeGridProps {
   poll: {
@@ -17,25 +25,54 @@ interface TimeGridProps {
     start_time: string
     end_time: string
     slot_minutes?: number | null
+    timezone?: string | null
   }
   participantId: string
   isClosed?: boolean
 }
 
 export function TimeGrid({ poll, participantId, isClosed = false }: TimeGridProps) {
+  const { language } = useAppSettings()
+  const timeZone = poll.timezone ?? getTimeZoneForLanguage(language)
+  const t =
+    language === "en"
+      ? {
+          title: "Select your availability",
+          hint: "Drag to paint time slots.",
+          closed: "This poll is closed.",
+          save: "Save",
+          reset: "Reset",
+          resetConfirm: "Clear all your selections?",
+          saved: "Availability saved.",
+          saveError: "Failed to save.",
+          resetDone: "Selections cleared.",
+          resetError: "Failed to reset.",
+        }
+      : {
+          title: "가능한 시간 선택",
+          hint: "드래그하여 시간을 칠해주세요.",
+          closed: "마감되어 수정할 수 없습니다.",
+          save: "저장하기",
+          reset: "초기화",
+          resetConfirm: "내가 선택한 시간을 모두 초기화할까요?",
+          saved: "시간이 저장되었습니다!",
+          saveError: "저장 실패",
+          resetDone: "입력이 초기화되었습니다.",
+          resetError: "초기화 실패",
+        }
   const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set())
   const [isSaving, setIsSaving] = useState(false)
   const isDragging = useRef(false)
   const isAdding = useRef(true) // 드래그 시작 시 추가 모드인지 삭제 모드인지
   
   // 날짜 범위 계산
-  const startDate = parseISO(poll.start_date)
-  const endDate = parseISO(poll.end_date)
-  const days = []
-  let currDate = startDate
-  while (currDate <= endDate) {
+  const startDateKey = formatYearMonthDay(poll.start_date, language, timeZone)
+  const endDateKey = formatYearMonthDay(poll.end_date, language, timeZone)
+  const days: string[] = []
+  let currDate = startDateKey
+  while (currDate <= endDateKey) {
     days.push(currDate)
-    currDate = addDays(currDate, 1)
+    currDate = addDaysToYmd(currDate, 1)
   }
 
   // 시간 슬롯 생성 (기본 30분 단위)
@@ -80,8 +117,8 @@ export function TimeGrid({ poll, participantId, isClosed = false }: TimeGridProp
   }, [poll.id, participantId])
 
   // 슬롯 ID 생성 유틸
-  const getSlotId = (date: Date, time: string) => {
-    return `${format(date, 'yyyy-MM-dd')}_${time}`
+  const getSlotId = (dateKey: string, time: string) => {
+    return `${dateKey}_${time}`
   }
 
   // 드래그 핸들러
@@ -157,10 +194,10 @@ export function TimeGrid({ poll, participantId, isClosed = false }: TimeGridProp
         if (error) throw error
       }
 
-      toast.success("시간이 저장되었습니다!")
+      toast.success(t.saved)
     } catch (error) {
       console.error(error)
-      toast.error("저장 실패")
+      toast.error(t.saveError)
     } finally {
       setIsSaving(false)
     }
@@ -168,7 +205,7 @@ export function TimeGrid({ poll, participantId, isClosed = false }: TimeGridProp
 
   const handleReset = async () => {
     if (isClosed) return
-    if (!confirm("내가 선택한 시간을 모두 초기화할까요?")) return
+    if (!confirm(t.resetConfirm)) return
     try {
       setIsSaving(true)
       await supabase
@@ -177,10 +214,10 @@ export function TimeGrid({ poll, participantId, isClosed = false }: TimeGridProp
         .eq("poll_id", poll.id)
         .eq("participant_id", participantId)
       setSelectedSlots(new Set())
-      toast.success("입력이 초기화되었습니다.")
+      toast.success(t.resetDone)
     } catch (error) {
       console.error(error)
-      toast.error("초기화 실패")
+      toast.error(t.resetError)
     } finally {
       setIsSaving(false)
     }
@@ -190,18 +227,16 @@ export function TimeGrid({ poll, participantId, isClosed = false }: TimeGridProp
     <div className="space-y-4 select-none" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
       <div className="flex justify-between items-center mb-4 sticky top-0 bg-background/95 backdrop-blur z-10 py-2">
         <div>
-          <h3 className="font-semibold">가능한 시간 선택</h3>
-          <p className="text-sm text-muted-foreground">
-            {isClosed ? "마감되어 수정할 수 없습니다." : "드래그하여 시간을 칠해주세요."}
-          </p>
+          <h3 className="font-semibold">{t.title}</h3>
+          <p className="text-sm text-muted-foreground">{isClosed ? t.closed : t.hint}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleReset} disabled={isSaving || isClosed}>
-            초기화
+            {t.reset}
           </Button>
           <Button onClick={handleSave} disabled={isSaving || isClosed}>
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            저장하기
+            {t.save}
           </Button>
         </div>
       </div>
@@ -211,12 +246,15 @@ export function TimeGrid({ poll, participantId, isClosed = false }: TimeGridProp
           
           {/* 헤더: 날짜 */}
           <div className="p-2 bg-muted/50 border-b border-r sticky left-0 z-20"></div>
-          {days.map((day) => (
-            <div key={day.toISOString()} className="p-2 text-center bg-muted/50 border-b border-r min-w-[80px]">
-              <div className="text-xs text-muted-foreground">{format(day, 'E', { locale: ko })}</div>
-              <div className="font-bold">{format(day, 'M/d')}</div>
+          {days.map((day) => {
+            const dayDate = zonedDateFromYmd(day, timeZone)
+            return (
+            <div key={day} className="p-2 text-center bg-muted/50 border-b border-r min-w-[80px]">
+              <div className="text-xs text-muted-foreground">{formatWeekday(dayDate, language, timeZone)}</div>
+              <div className="font-bold">{formatMonthDay(dayDate, language, timeZone)}</div>
             </div>
-          ))}
+            )
+          })}
 
           {/* 바디: 시간 슬롯 */}
           {timeSlots.map((time) => (
