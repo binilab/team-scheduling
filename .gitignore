@@ -47,6 +47,8 @@ ehthumbs.db
 
 # Cloudflare (Cloudflare 배포 관련)
 .wrangler/
+.vercel
+
 
 # Supabase (CLI 사용 시)
 supabase/.temp/
