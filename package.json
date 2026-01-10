@@ -7,6 +7,7 @@
     "pages:build": "npx @cloudflare/next-on-pages",
     "dev": "next dev",
     "lint": "eslint .",
+    "postbuild": "next-sitemap",
     "start": "next start"
   },
   "dependencies": {
@@ -70,6 +71,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint-plugin-next-on-pages": "^1.13.16",
+    "next-sitemap": "^4.2.3",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",
