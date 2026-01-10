@@ -16,11 +16,13 @@ interface TimeGridProps {
     end_date: string
     start_time: string
     end_time: string
+    slot_minutes?: number | null
   }
   participantId: string
+  isClosed?: boolean
 }
 
-export function TimeGrid({ poll, participantId }: TimeGridProps) {
+export function TimeGrid({ poll, participantId, isClosed = false }: TimeGridProps) {
   const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set())
   const [isSaving, setIsSaving] = useState(false)
   const isDragging = useRef(false)
@@ -36,7 +38,11 @@ export function TimeGrid({ poll, participantId }: TimeGridProps) {
     currDate = addDays(currDate, 1)
   }
 
-  // 시간 슬롯 생성 (30분 단위)
+  // 시간 슬롯 생성 (기본 30분 단위)
+  const storedSlotMinutes =
+    typeof window === "undefined" ? NaN : Number(localStorage.getItem(`poll:${poll.id}:slotMinutes`) || "")
+  const slotMinutes =
+    poll.slot_minutes ?? (Number.isFinite(storedSlotMinutes) && storedSlotMinutes > 0 ? storedSlotMinutes : 30)
   const timeSlots: string[] = []
   const [startHour, startMin] = poll.start_time.split(':').map(Number)
   const [endHour, endMin] = poll.end_time.split(':').map(Number)
@@ -48,7 +54,7 @@ export function TimeGrid({ poll, participantId }: TimeGridProps) {
     const d = new Date(currentObj)
     const timeString = format(d, 'HH:mm')
     timeSlots.push(timeString)
-    currentObj = d.setMinutes(d.getMinutes() + 30) // 30분씩 증가
+    currentObj = d.setMinutes(d.getMinutes() + slotMinutes)
   }
 
   // 데이터 불러오기 (이미 저장된 시간)
@@ -80,6 +86,7 @@ export function TimeGrid({ poll, participantId }: TimeGridProps) {
 
   // 드래그 핸들러
   const handleMouseDown = (slotId: string) => {
+    if (isClosed) return
     isDragging.current = true
     const newSet = new Set(selectedSlots)
     
@@ -95,6 +102,7 @@ export function TimeGrid({ poll, participantId }: TimeGridProps) {
 
   const handleMouseEnter = (slotId: string) => {
     if (!isDragging.current) return
+    if (isClosed) return
     
     const newSet = new Set(selectedSlots)
     if (isAdding.current) {
@@ -111,6 +119,7 @@ export function TimeGrid({ poll, participantId }: TimeGridProps) {
 
   // 저장 핸들러
   const handleSave = async () => {
+    if (isClosed) return
     try {
       setIsSaving(true)
       
@@ -157,17 +166,44 @@ export function TimeGrid({ poll, participantId }: TimeGridProps) {
     }
   }
 
+  const handleReset = async () => {
+    if (isClosed) return
+    if (!confirm("내가 선택한 시간을 모두 초기화할까요?")) return
+    try {
+      setIsSaving(true)
+      await supabase
+        .from("availabilities")
+        .delete()
+        .eq("poll_id", poll.id)
+        .eq("participant_id", participantId)
+      setSelectedSlots(new Set())
+      toast.success("입력이 초기화되었습니다.")
+    } catch (error) {
+      console.error(error)
+      toast.error("초기화 실패")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-4 select-none" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
       <div className="flex justify-between items-center mb-4 sticky top-0 bg-background/95 backdrop-blur z-10 py-2">
         <div>
           <h3 className="font-semibold">가능한 시간 선택</h3>
-          <p className="text-sm text-muted-foreground">드래그하여 시간을 칠해주세요.</p>
+          <p className="text-sm text-muted-foreground">
+            {isClosed ? "마감되어 수정할 수 없습니다." : "드래그하여 시간을 칠해주세요."}
+          </p>
         </div>
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          저장하기
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleReset} disabled={isSaving || isClosed}>
+            초기화
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving || isClosed}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            저장하기
+          </Button>
+        </div>
       </div>
 
       <div className="overflow-x-auto border rounded-md shadow-sm">

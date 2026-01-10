@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 import { format } from "date-fns"
 import { CalendarIcon, Loader2 } from "lucide-react"
@@ -48,11 +48,13 @@ const formSchema = z.object({
     to: z.date({ required_error: "종료 날짜를 선택해주세요." }),
   }),
   duration: z.string(),
+  deadline: z.string().optional(),
 })
 
 export default function CreatePollPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [deadlineTouched, setDeadlineTouched] = useState(false)
 
   // 2. 폼 초기화
   const form = useForm<z.infer<typeof formSchema>>({
@@ -60,8 +62,21 @@ export default function CreatePollPage() {
     defaultValues: {
       title: "",
       duration: "60", // 기본 60분
+      deadline: "",
     },
   })
+
+  const dateRange = useWatch({ control: form.control, name: "dateRange" })
+
+  useEffect(() => {
+    if (!dateRange?.to || deadlineTouched) return
+    const deadline = new Date(dateRange.to)
+    deadline.setHours(23, 59, 0, 0)
+    const localValue = new Date(deadline.getTime() - deadline.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16)
+    form.setValue("deadline", localValue)
+  }, [dateRange, deadlineTouched, form])
 
   // 3. 제출 핸들러 (Supabase 저장)
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -78,14 +93,35 @@ export default function CreatePollPage() {
             duration: parseInt(values.duration),
             start_time: "09:00", // MVP라 고정 (나중에 입력 받기 가능)
             end_time: "22:00",
+            deadline: values.deadline ? new Date(values.deadline).toISOString() : null,
           },
         ])
         .select()
         .single() // 생성된 방의 ID를 바로 받기 위해
-
-      if (error) {
-        throw error
+      
+      if (error && /deadline|column/i.test(error.message)) {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("polls")
+          .insert([
+            {
+              title: values.title,
+              start_date: values.dateRange.from.toISOString(),
+              end_date: values.dateRange.to.toISOString(),
+              duration: parseInt(values.duration),
+              start_time: "09:00",
+              end_time: "22:00",
+            },
+          ])
+          .select()
+          .single()
+        if (fallbackError) throw fallbackError
+        if (!fallbackData) throw new Error("방 생성에 실패했습니다.")
+        toast.success("방이 생성되었습니다!")
+        router.push(`/poll/${fallbackData.id}`)
+        return
       }
+
+      if (error) throw error
 
       toast.success("방이 생성되었습니다!")
       
@@ -102,6 +138,11 @@ export default function CreatePollPage() {
 
   return (
     <div className="container max-w-lg mx-auto py-10 px-4">
+      <div className="mb-4">
+        <Button variant="ghost" onClick={() => router.back()}>
+          ← 뒤로가기
+        </Button>
+      </div>
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold mb-2">새로운 팀플 일정 만들기</h1>
         <p className="text-muted-foreground">
@@ -175,6 +216,29 @@ export default function CreatePollPage() {
                 <FormDescription>
                   팀원들이 선택할 날짜 범위를 지정해주세요.
                 </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* 마감 시간 */}
+          <FormField
+            control={form.control}
+            name="deadline"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>마감 시간</FormLabel>
+                <FormControl>
+                  <Input
+                    type="datetime-local"
+                    value={field.value || ""}
+                    onChange={(e) => {
+                      field.onChange(e.target.value)
+                      setDeadlineTouched(true)
+                    }}
+                  />
+                </FormControl>
+                <FormDescription>마감 이후에는 시간 입력이 잠깁니다.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}

@@ -12,7 +12,14 @@ function extractPollCode(input: string): string {
   const trimmed = input.trim()
 
   // Check if it's a full URL
-  const urlPatterns = [/timepoll\.kr\/p\/([a-zA-Z0-9]+)/, /\/p\/([a-zA-Z0-9]+)/, /^https?:\/\/.*\/p\/([a-zA-Z0-9]+)/]
+  const urlPatterns = [
+    /timepoll\.kr\/poll\/([a-zA-Z0-9-]+)/,
+    /\/poll\/([a-zA-Z0-9-]+)/,
+    /^https?:\/\/.*\/poll\/([a-zA-Z0-9-]+)/,
+    /timepoll\.kr\/p\/([a-zA-Z0-9-]+)/,
+    /\/p\/([a-zA-Z0-9-]+)/,
+    /^https?:\/\/.*\/p\/([a-zA-Z0-9-]+)/,
+  ]
 
   for (const pattern of urlPatterns) {
     const match = trimmed.match(pattern)
@@ -20,7 +27,7 @@ function extractPollCode(input: string): string {
   }
 
   // If it's just a code (alphanumeric only), return it
-  if (/^[a-zA-Z0-9]+$/.test(trimmed)) {
+  if (/^[a-zA-Z0-9-]+$/.test(trimmed)) {
     return trimmed
   }
 
@@ -37,7 +44,7 @@ export function JoinPollCard() {
     try {
       const text = await navigator.clipboard.readText()
       const code = extractPollCode(text)
-      if (code && code !== pollCode && /timepoll|\/p\//.test(text)) {
+      if (code && code !== pollCode && /timepoll|\/poll\/|\/p\//.test(text)) {
         setClipboardContent(text)
         setShowClipboardHint(true)
       }
@@ -61,8 +68,8 @@ export function JoinPollCard() {
   const handleJoin = () => {
     const code = extractPollCode(pollCode)
     if (code) {
-      // Navigate to /p/{code}
-      window.location.href = `/p/${code}`
+      // Navigate to /poll/{code}
+      window.location.href = `/poll/${code}`
     }
   }
 

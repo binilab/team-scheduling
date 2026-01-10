@@ -31,6 +31,7 @@ export function AuthDialog({ isOpen, onSuccess }: AuthDialogProps) {
   const params = useParams()
   const [name, setName] = useState("")
   const [role, setRole] = useState("member")
+  const [weight, setWeight] = useState("1")
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
@@ -43,18 +44,53 @@ export function AuthDialog({ isOpen, onSuccess }: AuthDialogProps) {
       setLoading(true)
       const pollId = params.id as string
 
+      // 중복 이름 검사
+      const existing = await supabase
+        .from("participants")
+        .select("id, name")
+        .eq("poll_id", pollId)
+        .eq("name", name)
+        .maybeSingle()
+
+      if (existing.data?.id) {
+        const storedId = localStorage.getItem(`poll:${pollId}:participantId`)
+        const storedName = localStorage.getItem(`poll:${pollId}:participantName`)
+        if (storedId === existing.data.id || storedName === name) {
+          toast.success(`${name}님 다시 오셨네요!`)
+          onSuccess(existing.data.id, name)
+          return
+        }
+        toast.error("이미 참여한 이름입니다. 다른 이름을 입력해주세요.")
+        return
+      }
+
       // 참가자 등록
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("participants")
         .insert([
           {
             poll_id: pollId,
             name: name,
             role: role,
+            weight: parseFloat(weight),
           },
         ])
         .select()
         .single()
+
+      if (error && /weight|column/i.test(error.message)) {
+        ;({ data, error } = await supabase
+          .from("participants")
+          .insert([
+            {
+              poll_id: pollId,
+              name: name,
+              role: role,
+            },
+          ])
+          .select()
+          .single())
+      }
 
       if (error) throw error
 
@@ -96,11 +132,24 @@ export function AuthDialog({ isOpen, onSuccess }: AuthDialogProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="member">일반 팀원</SelectItem>
-                <SelectItem value="leader">팀장/발표자 (가중치 2배)</SelectItem>
+                <SelectItem value="leader">팀장/발표자</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="weight">가중치</Label>
+            <Select value={weight} onValueChange={setWeight}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1x (기본)</SelectItem>
+                <SelectItem value="1.5">1.5x (중요)</SelectItem>
+                <SelectItem value="2">2x (필수 참여)</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              팀장이나 꼭 참석해야 하는 사람은 역할을 변경해주세요.
+              팀에서 중요도를 정해 가중치를 선택하세요.
             </p>
           </div>
         </div>

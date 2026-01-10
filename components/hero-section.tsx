@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,6 +21,8 @@ import {
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { supabase } from "@/lib/supabase"
+import { toast } from "sonner"
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"]
 const MONTHS = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
@@ -48,27 +51,47 @@ function isInRange(date: Date, start: Date | null, end: Date | null) {
 }
 
 export function HeroSection() {
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isCreated, setIsCreated] = useState(false)
   const [copied, setCopied] = useState(false)
   const [pollLink, setPollLink] = useState("")
+  const [pollId, setPollId] = useState("")
   const [pollTitle, setPollTitle] = useState("")
 
-  const [startDate, setStartDate] = useState<Date | null>(new Date(2026, 0, 13))
-  const [endDate, setEndDate] = useState<Date | null>(new Date(2026, 0, 17))
+  const today = new Date()
+  const initialStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const initialEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2)
+  const [startDate, setStartDate] = useState<Date | null>(initialStart)
+  const [endDate, setEndDate] = useState<Date | null>(initialEnd)
   const [selectingStart, setSelectingStart] = useState(true)
   const [calendarOpen, setCalendarOpen] = useState(false)
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1))
+  const [currentMonth, setCurrentMonth] = useState(initialStart)
   const [showQR, setShowQR] = useState(false)
+  const [timeRange, setTimeRange] = useState("10-22")
+  const [slotMinutes, setSlotMinutes] = useState("30")
+  const [meetingMinutes, setMeetingMinutes] = useState("60")
+  const [deadlineLocal, setDeadlineLocal] = useState("")
+  const [deadlineTouched, setDeadlineTouched] = useState(false)
+
+  useEffect(() => {
+    if (!endDate || deadlineTouched) return
+    const deadline = new Date(endDate)
+    deadline.setHours(23, 59, 0, 0)
+    const localValue = new Date(deadline.getTime() - deadline.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16)
+    setDeadlineLocal(localValue)
+  }, [endDate, deadlineTouched])
 
   const handleQuickSelect = (type: "thisWeek" | "nextWeek" | "next3days" | "weekend") => {
-    const today = new Date(2026, 0, 10) // 오늘 날짜
-    const dayOfWeek = today.getDay()
+    const base = new Date()
+    const dayOfWeek = base.getDay()
 
     switch (type) {
       case "thisWeek": {
-        const monday = new Date(today)
-        monday.setDate(today.getDate() - dayOfWeek + 1)
+        const monday = new Date(base)
+        monday.setDate(base.getDate() - dayOfWeek + 1)
         const friday = new Date(monday)
         friday.setDate(monday.getDate() + 4)
         setStartDate(monday)
@@ -76,8 +99,8 @@ export function HeroSection() {
         break
       }
       case "nextWeek": {
-        const nextMonday = new Date(today)
-        nextMonday.setDate(today.getDate() - dayOfWeek + 8)
+        const nextMonday = new Date(base)
+        nextMonday.setDate(base.getDate() - dayOfWeek + 8)
         const nextFriday = new Date(nextMonday)
         nextFriday.setDate(nextMonday.getDate() + 4)
         setStartDate(nextMonday)
@@ -85,17 +108,17 @@ export function HeroSection() {
         break
       }
       case "next3days": {
-        const start = new Date(today)
-        start.setDate(today.getDate() + 1)
-        const end = new Date(today)
-        end.setDate(today.getDate() + 3)
+        const start = new Date(base)
+        start.setDate(base.getDate() + 1)
+        const end = new Date(base)
+        end.setDate(base.getDate() + 3)
         setStartDate(start)
         setEndDate(end)
         break
       }
       case "weekend": {
-        const saturday = new Date(today)
-        saturday.setDate(today.getDate() + (6 - dayOfWeek))
+        const saturday = new Date(base)
+        saturday.setDate(saturday.getDate() + (6 - dayOfWeek))
         const sunday = new Date(saturday)
         sunday.setDate(saturday.getDate() + 1)
         setStartDate(saturday)
@@ -123,12 +146,65 @@ export function HeroSection() {
     }
   }
 
+  const parseTimeRange = (range: string) => {
+    const [start, end] = range.split("-").map((value) => value.trim())
+    const startHour = start.padStart(2, "0")
+    const endHour = end.padStart(2, "0")
+    return {
+      startTime: `${startHour}:00`,
+      endTime: `${endHour}:00`,
+    }
+  }
+
   const handleCreate = async () => {
-    setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setPollLink("https://timepoll.kr/p/abc123")
-    setIsLoading(false)
-    setIsCreated(true)
+    if (!startDate || !endDate) {
+      toast.error("날짜 범위를 선택해주세요.")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      const title = pollTitle.trim() || getAutoTitle()
+      const { startTime, endTime } = parseTimeRange(timeRange)
+      const payload = {
+        title,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        duration: parseInt(meetingMinutes, 10),
+        start_time: startTime,
+        end_time: endTime,
+        deadline: deadlineLocal ? new Date(deadlineLocal).toISOString() : null,
+      }
+
+      let { data, error } = await supabase
+        .from("polls")
+        .insert([{ ...payload, slot_minutes: parseInt(slotMinutes, 10) }])
+        .select()
+        .single()
+
+      if (error && /slot_minutes|deadline|column/i.test(error.message)) {
+        const fallbackPayload = {
+          ...payload,
+        }
+        delete (fallbackPayload as { deadline?: string | null }).deadline
+        ;({ data, error } = await supabase.from("polls").insert([fallbackPayload]).select().single())
+      }
+
+      if (error) throw error
+      if (!data?.id) throw new Error("방 생성에 실패했습니다.")
+
+      const link = `${window.location.origin}/poll/${data.id}`
+      setPollId(data.id)
+      setPollLink(link)
+      localStorage.setItem(`poll:${data.id}:slotMinutes`, slotMinutes)
+      setIsCreated(true)
+      toast.success("링크가 생성되었습니다!")
+    } catch (error) {
+      console.error(error)
+      toast.error("방 생성 중 오류가 발생했습니다.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleCopy = () => {
@@ -146,7 +222,9 @@ export function HeroSection() {
     setIsCreated(false)
     setPollLink("")
     setPollTitle("")
+    setPollId("")
     setShowQR(false)
+    setDeadlineTouched(false)
   }
 
   const getAutoTitle = () => {
@@ -340,7 +418,7 @@ export function HeroSection() {
                   <Clock className="w-4 h-4 text-muted-foreground" />
                   시간대
                 </Label>
-                <Select defaultValue="10-22">
+                <Select value={timeRange} onValueChange={setTimeRange}>
                   <SelectTrigger className="h-11">
                     <SelectValue />
                   </SelectTrigger>
@@ -353,7 +431,7 @@ export function HeroSection() {
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-medium">슬롯 단위</Label>
-                <Select defaultValue="30">
+                <Select value={slotMinutes} onValueChange={setSlotMinutes}>
                   <SelectTrigger className="h-11">
                     <SelectValue />
                   </SelectTrigger>
@@ -366,8 +444,22 @@ export function HeroSection() {
             </div>
 
             <div className="space-y-2">
+              <Label className="text-sm font-medium">마감 시간</Label>
+              <Input
+                type="datetime-local"
+                className="h-11"
+                value={deadlineLocal}
+                onChange={(e) => {
+                  setDeadlineLocal(e.target.value)
+                  setDeadlineTouched(true)
+                }}
+              />
+              <p className="text-xs text-muted-foreground">입력 마감 이후에는 수정이 잠깁니다.</p>
+            </div>
+
+            <div className="space-y-2">
               <Label className="text-sm font-medium">회의 길이</Label>
-              <Select defaultValue="60">
+              <Select value={meetingMinutes} onValueChange={setMeetingMinutes}>
                 <SelectTrigger className="h-11">
                   <SelectValue />
                 </SelectTrigger>
@@ -454,7 +546,7 @@ export function HeroSection() {
               <p className="text-sm text-muted-foreground text-center mb-3">
                 팀원에게 던지고, 본인도 가능 시간 체크하러 가요
               </p>
-              <Button className="w-full h-11" variant="secondary">
+              <Button className="w-full h-11" variant="secondary" onClick={() => router.push(`/poll/${pollId}`)}>
                 내 시간 입력하기
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

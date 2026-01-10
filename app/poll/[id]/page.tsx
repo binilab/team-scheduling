@@ -20,6 +20,8 @@ type PollData = {
   start_time: string
   end_time: string
   duration: number
+  slot_minutes?: number | null
+  deadline?: string | null
 }
 
 // Next.js 15+ 에서는 params가 Promise입니다.
@@ -52,10 +54,17 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
     if (pollId) fetchPoll()
   }, [pollId])
 
+  useEffect(() => {
+    if (!pollId) return
+    const storedId = localStorage.getItem(`poll:${pollId}:participantId`)
+    if (storedId) setParticipantId(storedId)
+  }, [pollId])
+
   // 2. 로그인 성공 핸들러
-  const handleAuthSuccess = (id: string) => {
+  const handleAuthSuccess = (id: string, name: string) => {
     setParticipantId(id)
-    // 여기서 나중에 로컬 스토리지에 저장하여 새로고침 유지 가능
+    localStorage.setItem(`poll:${pollId}:participantId`, id)
+    localStorage.setItem(`poll:${pollId}:participantName`, name)
   }
 
   if (loading) {
@@ -70,6 +79,9 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
     return <div className="p-8 text-center">존재하지 않는 방입니다.</div>
   }
 
+  const deadline = poll.deadline ? new Date(poll.deadline) : null
+  const isClosed = deadline ? Date.now() > deadline.getTime() : false
+
   return (
     <div className="min-h-screen bg-background">
       {/* 아직 로그인 안했으면 다이얼로그 띄우기 */}
@@ -81,10 +93,18 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
       {/* 헤더 */}
       <header className="border-b px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-2 w-fit">
+            ← 뒤로가기
+          </Button>
           <h1 className="text-2xl font-bold">{poll.title}</h1>
           <p className="text-sm text-muted-foreground">
             {poll.start_date} ~ {poll.end_date} | {poll.duration}분 회의
           </p>
+          {deadline && (
+            <p className="text-xs text-muted-foreground mt-1">
+              마감: {deadline.toLocaleString()} {isClosed ? "(마감됨)" : ""}
+            </p>
+          )}
         </div>
         <Button onClick={() => router.push(`/poll/${pollId}/result`)}>
           결과 보기 →
@@ -94,9 +114,9 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
       {/* 메인 컨텐츠 영역 (그리드 들어갈 곳) */}
       <main className="p-4 md:p-6 max-w-7xl mx-auto">
         {participantId ? (
-          <TimeGrid poll={poll} participantId={participantId} />
+          <TimeGrid poll={poll} participantId={participantId} isClosed={isClosed} />
         ) : (
-          <div className="py-20 text-center">로그인이 필요합니다.</div>
+          <div className="py-20 text-center">이름 입력이 필요합니다.</div>
         )}
       </main>
     </div>

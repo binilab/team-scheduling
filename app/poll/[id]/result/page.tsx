@@ -48,17 +48,30 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
   if (loading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>
   if (!data) return <div>데이터를 불러올 수 없습니다.</div>
 
+  const deadline = data.poll?.deadline ? new Date(data.poll.deadline) : null
+  const isClosed = deadline ? Date.now() > deadline.getTime() : false
+
   return (
     <div className="container max-w-5xl mx-auto py-10 px-4">
+      <div className="mb-6">
+        <Button variant="ghost" onClick={() => router.back()}>
+          ← 뒤로가기
+        </Button>
+      </div>
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold">{data.poll.title} 결과</h1>
           <p className="text-muted-foreground">
             현재까지 {data.participants.length}명이 참여했습니다.
           </p>
+          {deadline && (
+            <p className="text-xs text-muted-foreground mt-1">
+              마감: {deadline.toLocaleString()} {isClosed ? "(마감됨)" : ""}
+            </p>
+          )}
         </div>
         <div className="flex gap-2">
-           <Button variant="outline" onClick={() => router.push(`/poll/${pollId}`)}>
+           <Button variant="outline" onClick={() => router.push(`/poll/${pollId}`)} disabled={isClosed}>
              내 시간 수정하기
            </Button>
            <Button onClick={copyLink}>

@@ -10,16 +10,19 @@ import { Star, Users } from "lucide-react"
 
 interface HeatmapProps {
   poll: {
+    id: string
     start_date: string
     end_date: string
     start_time: string
     end_time: string
     duration: number
+    slot_minutes?: number | null
   }
   participants: {
     id: string
     name: string
     role: string // 'leader' | 'member'
+    weight?: number | null
   }[]
   availabilities: {
     participant_id: string
@@ -42,6 +45,10 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
       curr = addDays(curr, 1)
     }
 
+    const storedSlotMinutes =
+      typeof window === "undefined" ? NaN : Number(localStorage.getItem(`poll:${poll.id}:slotMinutes`) || "")
+    const slotMinutes =
+      poll.slot_minutes ?? (Number.isFinite(storedSlotMinutes) && storedSlotMinutes > 0 ? storedSlotMinutes : 30)
     const timeSlots: string[] = []
     const [startH, startM] = poll.start_time.split(':').map(Number)
     const [endH, endM] = poll.end_time.split(':').map(Number)
@@ -49,7 +56,7 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
     const e = new Date().setHours(endH, endM, 0, 0)
     while (t < e) {
       timeSlots.push(format(new Date(t), 'HH:mm'))
-      t = new Date(t).setMinutes(new Date(t).getMinutes() + 30)
+      t = new Date(t).setMinutes(new Date(t).getMinutes() + slotMinutes)
     }
 
     // 점수 계산 (히트맵용)
@@ -59,7 +66,7 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
 
     availabilities.forEach(av => {
       const participant = participants.find(p => p.id === av.participant_id)
-      const weight = participant?.role === 'leader' ? 2 : 1 // 팀장은 가중치 2배
+      const weight = participant?.weight ?? (participant?.role === 'leader' ? 2 : 1)
 
       av.slots.forEach((time: string) => {
         const key = `${av.date}_${time}`
@@ -70,7 +77,7 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
     })
 
     // 베스트 시간 추천 알고리즘 (연속된 시간 찾기)
-    const requiredSlots = Math.ceil(poll.duration / 30) // 60분이면 2개 슬롯 필요
+    const requiredSlots = Math.ceil(poll.duration / slotMinutes)
     const candidates: { start: string; score: number; count: number }[] = []
 
     days.forEach(day => {

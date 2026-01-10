@@ -2,8 +2,6 @@ import { HeroSection } from "@/components/hero-section"
 import { HowItWorks } from "@/components/how-it-works"
 import { LivePreview } from "@/components/live-preview"
 import { JoinPollCard } from "@/components/join-poll-card"
-import { RecentPolls } from "@/components/recent-polls"
-import { FeatureHighlights } from "@/components/feature-highlights"
 
 export default function HomePage() {
   return (
@@ -21,8 +19,6 @@ export default function HomePage() {
           {/* Right Column - Sidebar */}
           <aside className="space-y-6 lg:sticky lg:top-8 lg:self-start">
             <JoinPollCard />
-            <RecentPolls />
-            <FeatureHighlights />
           </aside>
         </div>
       </div>
