@@ -49,6 +49,11 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <Script async src="https://www.googletagmanager.com/gtag/js?id=G-MCGP0FSM5L" />
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6460615081786537"
+          crossOrigin="anonymous"
+        />
         <Script id="google-tag">
           {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
