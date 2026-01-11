@@ -19,12 +19,14 @@ import {
   MessageCircle,
   QrCode,
   ArrowRight,
+  Hash,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { useAppSettings } from "@/components/app-providers"
+import { JoinPollCard } from "@/components/join-poll-card"
 import {
   formatDateTimeInput,
   formatMonthDay,
@@ -35,6 +37,10 @@ import {
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"]
 const MONTHS = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
+
+function generatePollCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate()
@@ -65,6 +71,8 @@ export function HeroSection() {
   const [pollLink, setPollLink] = useState("")
   const [pollId, setPollId] = useState("")
   const [pollTitle, setPollTitle] = useState("")
+  const [pollCode, setPollCode] = useState("")
+  const [codeCopied, setCodeCopied] = useState(false)
 
   const today = new Date()
   const initialStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
@@ -78,9 +86,11 @@ export function HeroSection() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
   const [qrError, setQrError] = useState<string | null>(null)
-  const [timeRange, setTimeRange] = useState("10-22")
+  const [startHour, setStartHour] = useState("10")
+  const [endHour, setEndHour] = useState("22")
   const [slotMinutes, setSlotMinutes] = useState("30")
   const [meetingMinutes, setMeetingMinutes] = useState("60")
+  const [participantLimit, setParticipantLimit] = useState("4")
   const [deadlineLocal, setDeadlineLocal] = useState("")
   const [deadlineTouched, setDeadlineTouched] = useState(false)
 
@@ -92,11 +102,11 @@ export function HeroSection() {
           headlineHighlight: "done in 1 minute",
           headlineBottom: "",
           subcopy: "Share a link → everyone checks availability → best time is auto-picked.",
-          subcopyLine2: "No more back-and-forth in chat.",
+          subcopyLine2: "Create a poll, share it, and watch overlaps appear.",
           titleLabel: "Schedule title",
           titleOptional: "(optional)",
           titlePlaceholderPrefix: 'Auto title if empty: "',
-          dateLabel: "Date range",
+          dateLabel: "Meeting dates",
           datePlaceholder: "Select start and end dates",
           dateDays: "days",
           quickThisWeek: "This week",
@@ -105,9 +115,13 @@ export function HeroSection() {
           quickWeekend: "Weekend only",
           pickStart: "Select a start date",
           pickEnd: "Select an end date",
-          timeRangeLabel: "Time range",
-          slotLabel: "Slot size",
-          deadlineLabel: "Deadline",
+          timeRangeLabel: "Meeting time range",
+          timeRangeHint: "Set the meeting time range.",
+          slotLabel: "Meeting time unit",
+          slotHint: "Sets how many minutes each grid block represents.",
+          participantLabel: "Team size",
+          participantHint: "How many people will participate?",
+          deadlineLabel: "Poll deadline",
           deadlineHint: "Edits are locked after the deadline.",
           durationLabel: "Meeting length",
           create: "Create link",
@@ -115,7 +129,11 @@ export function HeroSection() {
           createdTitle: "Link is ready!",
           createdDesc: "Share it with your team",
           copied: "Link copied!",
+          codeCopied: "Code copied!",
           copy: "Copy",
+          copyCode: "Copy code",
+          codeLabel: "Invite code",
+          codeHint: "Enter this 6-digit code to join quickly.",
           kakao: "Kakao",
           qr: "QR",
           qrError: "Failed to generate QR code.",
@@ -128,6 +146,7 @@ export function HeroSection() {
           dateError: "Please select a date range.",
           createSuccess: "Link created!",
           createError: "Failed to create the poll.",
+          timeRangeError: "End time must be later than start time.",
         }
       : {
           badge: "가입 없이 바로 시작",
@@ -135,11 +154,11 @@ export function HeroSection() {
           headlineHighlight: "1분이면",
           headlineBottom: "정리 끝",
           subcopy: "링크 공유 → 각자 가능한 시간 체크 → 자동으로 베스트 시간 추천.",
-          subcopyLine2: "더 이상 카톡으로 시간 물어보지 마세요",
+          subcopyLine2: "방 만들고 공유하면 겹치는 시간이 바로 보여요.",
           titleLabel: "일정 제목",
           titleOptional: "(선택)",
           titlePlaceholderPrefix: '비워두면 "',
-          dateLabel: "날짜 선택",
+          dateLabel: "회의 날짜 선택",
           datePlaceholder: "시작일 ~ 종료일을 선택하세요",
           dateDays: "일간",
           quickThisWeek: "이번 주",
@@ -148,9 +167,13 @@ export function HeroSection() {
           quickWeekend: "주말만",
           pickStart: "시작일을 선택하세요",
           pickEnd: "종료일을 선택하세요",
-          timeRangeLabel: "시간대",
-          slotLabel: "슬롯 단위",
-          deadlineLabel: "마감 시간",
+          timeRangeLabel: "회의 시간대",
+          timeRangeHint: "회의 시간대를 정해주세요.",
+          slotLabel: "회의 시간 단위",
+          slotHint: "한 칸이 몇 분인지 정하는 값이에요.",
+          participantLabel: "참여 인원",
+          participantHint: "총 참여 인원을 입력해주세요.",
+          deadlineLabel: "투표 마감시간",
           deadlineHint: "입력 마감 이후에는 수정이 잠깁니다.",
           durationLabel: "회의 길이",
           create: "링크 만들기",
@@ -158,7 +181,11 @@ export function HeroSection() {
           createdTitle: "링크 생성 완료!",
           createdDesc: "팀원들에게 공유하세요",
           copied: "링크 복사됨!",
+          codeCopied: "코드가 복사되었습니다!",
           copy: "복사",
+          copyCode: "코드 복사",
+          codeLabel: "참여 코드",
+          codeHint: "6자리 코드를 입력하면 바로 참여할 수 있어요",
           kakao: "카톡",
           qr: "QR",
           qrError: "QR 생성에 실패했습니다.",
@@ -171,6 +198,7 @@ export function HeroSection() {
           dateError: "날짜 범위를 선택해주세요.",
           createSuccess: "링크가 생성되었습니다!",
           createError: "방 생성 중 오류가 발생했습니다.",
+          timeRangeError: "종료 시간이 시작 시간보다 늦어야 합니다.",
         }
 
   useEffect(() => {
@@ -249,8 +277,7 @@ export function HeroSection() {
     }
   }
 
-  const parseTimeRange = (range: string) => {
-    const [start, end] = range.split("-").map((value) => value.trim())
+  const parseTimeRange = (start: string, end: string) => {
     const startHour = start.padStart(2, "0")
     const endHour = end.padStart(2, "0")
     return {
@@ -259,16 +286,35 @@ export function HeroSection() {
     }
   }
 
+  const resolveUniqueCode = async () => {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const candidate = generatePollCode()
+      const { data, error } = await supabase.from("polls").select("id").eq("code", candidate).maybeSingle()
+      if (error) {
+        if (/code|column/i.test(error.message)) return ""
+        return candidate
+      }
+      if (!data) return candidate
+    }
+    return generatePollCode()
+  }
+
   const handleCreate = async () => {
     if (!startDate || !endDate) {
       toast.error(t.dateError)
       return
     }
 
+    if (Number(endHour) <= Number(startHour)) {
+      toast.error(t.timeRangeError)
+      return
+    }
+
     try {
       setIsLoading(true)
+      const generatedCode = await resolveUniqueCode()
       const title = pollTitle.trim() || getAutoTitle()
-      const { startTime, endTime } = parseTimeRange(timeRange)
+      const { startTime, endTime } = parseTimeRange(startHour, endHour)
       const startDateUtc = zonedTimeToUtc(
         {
           year: startDate.getFullYear(),
@@ -301,23 +347,30 @@ export function HeroSection() {
         duration: parseInt(meetingMinutes, 10),
         start_time: startTime,
         end_time: endTime,
+        participant_limit: parseInt(participantLimit, 10),
         deadline: deadlineUtc ? deadlineUtc.toISOString() : null,
         timezone: timeZone,
       }
 
+      const payloadWithCode = generatedCode ? { ...payload, code: generatedCode } : payload
       let { data, error } = await supabase
         .from("polls")
-        .insert([{ ...payload, slot_minutes: parseInt(slotMinutes, 10) }])
+        .insert([{ ...payloadWithCode, slot_minutes: parseInt(slotMinutes, 10) }])
         .select()
         .single()
 
-      if (error && /slot_minutes|deadline|timezone|column/i.test(error.message)) {
+      if (error && /slot_minutes|deadline|timezone|code|participant_limit|column/i.test(error.message)) {
         const fallbackPayload = {
           ...payload,
         }
+        delete (fallbackPayload as { participant_limit?: number }).participant_limit
         delete (fallbackPayload as { deadline?: string | null }).deadline
         delete (fallbackPayload as { timezone?: string }).timezone
-        ;({ data, error } = await supabase.from("polls").insert([fallbackPayload]).select().single())
+        const fallbackWithCode = generatedCode ? { ...fallbackPayload, code: generatedCode } : fallbackPayload
+        if (/code|column|participant_limit/i.test(error.message)) {
+          delete (fallbackWithCode as { code?: string }).code
+        }
+        ;({ data, error } = await supabase.from("polls").insert([fallbackWithCode]).select().single())
       }
 
       if (error) throw error
@@ -326,6 +379,8 @@ export function HeroSection() {
       const link = `${window.location.origin}/poll/${data.id}`
       setPollId(data.id)
       setPollLink(link)
+      setPollCode(typeof data.code === "string" ? data.code : "")
+      setCodeCopied(false)
       localStorage.setItem(`poll:${data.id}:slotMinutes`, slotMinutes)
       setIsCreated(true)
       toast.success(t.createSuccess)
@@ -341,6 +396,13 @@ export function HeroSection() {
     navigator.clipboard.writeText(pollLink)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleCopyCode = () => {
+    if (!pollCode) return
+    navigator.clipboard.writeText(pollCode)
+    setCodeCopied(true)
+    setTimeout(() => setCodeCopied(false), 2000)
   }
 
   const handleKakaoShare = () => {
@@ -401,6 +463,8 @@ export function HeroSection() {
     setPollLink("")
     setPollTitle("")
     setPollId("")
+    setPollCode("")
+    setCodeCopied(false)
     setShowQR(false)
     setDeadlineTouched(false)
   }
@@ -509,21 +573,26 @@ export function HeroSection() {
   return (
     <section className="space-y-6">
       {/* Hero Text */}
-      <div className="space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[linear-gradient(120deg,rgba(49,130,246,0.16),rgba(56,189,248,0.12))] text-primary rounded-full text-sm font-medium border border-primary/10">
-          <Sparkles className="w-4 h-4" />
-          <span>{t.badge}</span>
+      <div className="grid grid-cols-2 gap-6 items-start">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[linear-gradient(120deg,rgba(49,130,246,0.16),rgba(56,189,248,0.12))] text-primary rounded-full text-sm font-medium border border-primary/10">
+            <Sparkles className="w-4 h-4" />
+            <span>{t.badge}</span>
+          </div>
+          <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight text-foreground text-balance">
+            {t.headlineTop}
+            <br />
+            <span className="text-primary">{t.headlineHighlight}</span> {t.headlineBottom}
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-lg">
+            {t.subcopy}
+            <br />
+            {t.subcopyLine2}
+          </p>
         </div>
-        <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight text-foreground text-balance">
-          {t.headlineTop}
-          <br />
-          <span className="text-primary">{t.headlineHighlight}</span> {t.headlineBottom}
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-lg">
-          {t.subcopy}
-          <br />
-          {t.subcopyLine2}
-        </p>
+        <div className="flex justify-end">
+          <JoinPollCard className="w-full max-w-[360px]" />
+        </div>
       </div>
 
       {/* Poll Creation Form */}
@@ -645,16 +714,36 @@ export function HeroSection() {
                   <Clock className="w-4 h-4 text-muted-foreground" />
                   {t.timeRangeLabel}
                 </Label>
-                <Select value={timeRange} onValueChange={setTimeRange}>
-                  <SelectTrigger className="h-11">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="9-18">09:00 - 18:00</SelectItem>
-                    <SelectItem value="10-22">10:00 - 22:00</SelectItem>
-                    <SelectItem value="12-24">12:00 - 24:00</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-2 gap-1">
+                  <Select value={startHour} onValueChange={setStartHour}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }).map((_, hour) => (
+                        <SelectItem key={hour} value={String(hour)}>
+                          {String(hour).padStart(2, "0")}:00
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={endHour} onValueChange={setEndHour}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }).map((_, hour) => {
+                        const display = String(hour + 1).padStart(2, "0")
+                        return (
+                          <SelectItem key={hour + 1} value={String(hour + 1)}>
+                            {display}:00
+                          </SelectItem>
+                        )
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-muted-foreground">{t.timeRangeHint}</p>
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-medium">{t.slotLabel}</Label>
@@ -667,7 +756,21 @@ export function HeroSection() {
                     <SelectItem value="60">60분</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">{t.slotHint}</p>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t.participantLabel}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={99}
+                className="h-11"
+                value={participantLimit}
+                onChange={(e) => setParticipantLimit(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">{t.participantHint}</p>
             </div>
 
             <div className="space-y-2">
@@ -741,6 +844,26 @@ export function HeroSection() {
               <div className="text-sm text-accent text-center font-medium animate-in fade-in slide-in-from-bottom-2">
                 {t.copied}
               </div>
+            )}
+
+            {pollCode && (
+              <>
+                <div className="text-xs font-medium text-muted-foreground">{t.codeLabel}</div>
+                <div className="flex items-center gap-2 p-3 bg-white/70 border border-white/70 rounded-xl shadow-[0_10px_30px_rgba(15,23,42,0.08)] dark:bg-slate-900/70 dark:border-slate-700/60">
+                  <Hash className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <span className="text-sm font-mono tracking-[0.3em] flex-1">{pollCode}</span>
+                  <Button size="sm" variant="ghost" onClick={handleCopyCode} className="shrink-0">
+                    {codeCopied ? <Check className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+                {codeCopied ? (
+                  <div className="text-sm text-accent text-center font-medium animate-in fade-in slide-in-from-bottom-2">
+                    {t.codeCopied}
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground text-center">{t.codeHint}</div>
+                )}
+              </>
             )}
 
             {/* 공유 버튼들 */}

@@ -47,28 +47,31 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <head>
-        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-MCGP0FSM5L" />
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6460615081786537"
-          strategy="beforeInteractive"
-          crossOrigin="anonymous"
-        />
-        <Script id="google-tag">
-          {`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-
-gtag('config', 'G-MCGP0FSM5L');`}
-        </Script>
-      </head>
+      <head />
       <body className={`font-sans antialiased`}>
         <AppProviders>
           <SiteControls />
           {children}
           <Analytics />
         </AppProviders>
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-MCGP0FSM5L"
+          strategy="afterInteractive"
+        />
+        <Script id="google-tag" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+
+gtag('config', 'G-MCGP0FSM5L');`}
+        </Script>
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6460615081786537"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
         <Script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
           strategy="afterInteractive"

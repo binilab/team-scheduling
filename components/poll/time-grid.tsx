@@ -38,7 +38,7 @@ export function TimeGrid({ poll, participantId, isClosed = false }: TimeGridProp
     language === "en"
       ? {
           title: "Select your availability",
-          hint: "Drag to paint time slots.",
+          hint: "Drag to paint time slots. Drag again to erase.",
           closed: "This poll is closed.",
           save: "Save",
           reset: "Reset",
@@ -50,7 +50,7 @@ export function TimeGrid({ poll, participantId, isClosed = false }: TimeGridProp
         }
       : {
           title: "가능한 시간 선택",
-          hint: "드래그하여 시간을 칠해주세요.",
+          hint: "드래그로 시간을 칠하고, 다시 드래그하면 지워져요.",
           closed: "마감되어 수정할 수 없습니다.",
           save: "저장하기",
           reset: "초기화",

@@ -36,6 +36,10 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
           copy: "Copy invite link",
           linkCopied: "Invite link copied!",
           copyIcon: "Copy invite link",
+          subtitle: "Live availability view",
+          legend: "Availability count:",
+          legendHelp: "Darker means more people are available.",
+          people: "people",
         }
       : {
           back: "뒤로가기",
@@ -47,6 +51,10 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
           copy: "초대 링크 복사",
           linkCopied: "초대 링크가 복사되었습니다!",
           copyIcon: "초대 링크 복사",
+          subtitle: "실시간 가능 시간 결과",
+          legend: "가능 인원 수:",
+          legendHelp: "색이 진할수록 그 시간에 가능한 인원이 많아요",
+          people: "명",
         }
   const safeBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -120,11 +128,41 @@ export default function ResultPage({ params }: { params: Promise<{ id: string }>
         </div>
       </div>
 
-      <Heatmap 
-        poll={data.poll} 
-        participants={data.participants} 
-        availabilities={data.availabilities} 
-      />
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold">
+            {language === "en" ? "Results" : "결과 보기"}
+          </h2>
+          <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+        </div>
+        <div className="bg-white/85 border border-white/70 rounded-2xl p-5 space-y-5 shadow-[0_20px_45px_rgba(15,23,42,0.1)] backdrop-blur dark:bg-slate-900/80 dark:border-slate-700/60">
+          <Heatmap 
+            poll={data.poll} 
+            participants={data.participants} 
+            availabilities={data.availabilities} 
+          />
+          <div className="space-y-1">
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <span className="text-foreground font-medium">{t.legend}</span>
+              <div className="flex items-center gap-1">
+                <span>0{t.people}</span>
+                <div className="flex gap-0.5">
+                  <div className="w-4 h-4 rounded bg-primary/20" />
+                  <div className="w-4 h-4 rounded bg-primary/40" />
+                  <div className="w-4 h-4 rounded bg-primary/60" />
+                  <div className="w-4 h-4 rounded bg-primary/80" />
+                  <div className="w-4 h-4 rounded bg-primary" />
+                </div>
+                <span>
+                  {data.participants.length}
+                  {t.people}
+                </span>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground/70 text-center">{t.legendHelp}</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

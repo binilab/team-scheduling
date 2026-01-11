@@ -60,6 +60,35 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
           overview: "전체 가능 시간 현황",
           score: "점",
         }
+
+  const normalizeDateKey = (value: string) => {
+    if (!value) return ""
+    return value.length >= 10 ? value.slice(0, 10) : value
+  }
+
+  const normalizeSlotTime = (value: string) => {
+    if (!value) return ""
+    const time = value.includes("T") ? value.split("T")[1] : value
+    return time.length >= 5 ? time.slice(0, 5) : time
+  }
+
+  const normalizeSlots = (slots: unknown) => {
+    if (Array.isArray(slots)) return slots.map((slot) => String(slot))
+    if (typeof slots === "string") {
+      const trimmed = slots.trim()
+      if (!trimmed) return []
+      if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+        try {
+          const parsed = JSON.parse(trimmed)
+          return Array.isArray(parsed) ? parsed.map((slot) => String(slot)) : []
+        } catch {
+          return trimmed.split(",").map((slot) => slot.trim()).filter(Boolean)
+        }
+      }
+      return trimmed.split(",").map((slot) => slot.trim()).filter(Boolean)
+    }
+    return []
+  }
   
   // 1. 데이터 가공 및 점수 계산 로직
   const { timeSlots, days, scoreMap, maxScore, bestSlots } = useMemo(() => {
@@ -95,9 +124,13 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
     availabilities.forEach(av => {
       const participant = participants.find(p => p.id === av.participant_id)
       const weight = participant?.weight ?? (participant?.role === 'leader' ? 2 : 1)
+      const dateKey = normalizeDateKey(av.date)
+      const slots = normalizeSlots(av.slots)
 
-      av.slots.forEach((time: string) => {
-        const key = `${av.date}_${time}`
+      slots.forEach((time: string) => {
+        const timeKey = normalizeSlotTime(String(time))
+        if (!dateKey || !timeKey) return
+        const key = `${dateKey}_${timeKey}`
         scoreMap[key] = (scoreMap[key] || 0) + weight
         countMap[key] = (countMap[key] || 0) + 1
         if (scoreMap[key] > maxScore) maxScore = scoreMap[key]
@@ -201,10 +234,12 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
                   const key = `${d}_${time}`
                   const score = scoreMap[key] || 0
                   return (
-                    <div 
-                      key={key} 
+                    <div
+                      key={key}
                       className="m-0.5 rounded-sm h-8 transition-all hover:ring-2 ring-primary/50 relative group"
-                      style={{ backgroundColor: `hsl(var(--primary) / ${getOpacity(score)})` }}
+                      style={{
+                        backgroundColor: `color-mix(in oklch, var(--primary) ${Math.round(getOpacity(score) * 100)}%, transparent)`,
+                      }}
                     >
                       {score > 0 && (
                          <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-10 pointer-events-none">

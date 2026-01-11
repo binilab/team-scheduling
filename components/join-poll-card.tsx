@@ -7,52 +7,73 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowRight, Link2, Clipboard } from "lucide-react"
 import { useAppSettings } from "@/components/app-providers"
+import { cn } from "@/lib/utils"
 
-function extractPollCode(input: string): string {
+type PollTarget = { type: "pollId" | "code"; value: string }
+
+function extractPollTarget(input: string): PollTarget | null {
   // Remove whitespace
   const trimmed = input.trim()
 
   // Check if it's a full URL
-  const urlPatterns = [
+  const pollUrlPatterns = [
     /timepoll\.kr\/poll\/([a-zA-Z0-9-]+)/,
     /\/poll\/([a-zA-Z0-9-]+)/,
     /^https?:\/\/.*\/poll\/([a-zA-Z0-9-]+)/,
-    /timepoll\.kr\/p\/([a-zA-Z0-9-]+)/,
-    /\/p\/([a-zA-Z0-9-]+)/,
-    /^https?:\/\/.*\/p\/([a-zA-Z0-9-]+)/,
   ]
 
-  for (const pattern of urlPatterns) {
+  for (const pattern of pollUrlPatterns) {
     const match = trimmed.match(pattern)
-    if (match) return match[1]
+    if (match) return { type: "pollId", value: match[1] }
   }
 
-  // If it's just a code (alphanumeric only), return it
-  if (/^[a-zA-Z0-9-]+$/.test(trimmed)) {
-    return trimmed
+  const codeUrlPatterns = [
+    /timepoll\.kr\/p\/([0-9]{6})/,
+    /\/p\/([0-9]{6})/,
+    /^https?:\/\/.*\/p\/([0-9]{6})/,
+  ]
+
+  for (const pattern of codeUrlPatterns) {
+    const match = trimmed.match(pattern)
+    if (match) return { type: "code", value: match[1] }
   }
 
-  return trimmed
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (uuidPattern.test(trimmed)) {
+    return { type: "pollId", value: trimmed }
+  }
+
+  // If it's just a code (6 digits), return it
+  if (/^[0-9]{6}$/.test(trimmed)) {
+    return { type: "code", value: trimmed }
+  }
+
+  return null
 }
 
-export function JoinPollCard() {
+type JoinPollCardProps = {
+  compact?: boolean
+  className?: string
+}
+
+export function JoinPollCard({ compact = false, className }: JoinPollCardProps) {
   const { language } = useAppSettings()
   const t =
     language === "en"
       ? {
-          title: "Join by link",
-          desc: "Paste a link or code",
+          title: "Join by link or code",
+          desc: "Paste an invite link or 6-digit code",
           clipboard: "Link found in clipboard.",
           clipboardAction: "Paste",
-          placeholder: "Link or code (e.g. abc123)",
+          placeholder: "Link or code (e.g. 123456)",
           hint: "No login needed — just enter your name",
         }
       : {
-          title: "링크로 바로 참여",
-          desc: "받은 링크나 코드를 입력하세요",
+          title: "링크/코드로 참여",
+          desc: "받은 링크나 6자리 코드를 입력하세요",
           clipboard: "클립보드에 링크가 있어요.",
           clipboardAction: "붙여넣기",
-          placeholder: "링크 또는 코드 (예: abc123)",
+          placeholder: "링크 또는 코드 (예: 123456)",
           hint: "가입 없이 이름만 입력하면 돼요",
         }
   const [pollCode, setPollCode] = useState("")
@@ -63,8 +84,8 @@ export function JoinPollCard() {
   const handleFocus = async () => {
     try {
       const text = await navigator.clipboard.readText()
-      const code = extractPollCode(text)
-      if (code && code !== pollCode && /timepoll|\/poll\/|\/p\//.test(text)) {
+      const target = extractPollTarget(text)
+      if (target?.value && target.value !== pollCode && /timepoll|\/poll\/|\/p\//.test(text)) {
         setClipboardContent(text)
         setShowClipboardHint(true)
       }
@@ -74,8 +95,8 @@ export function JoinPollCard() {
   }
 
   const handlePasteFromClipboard = () => {
-    const code = extractPollCode(clipboardContent)
-    setPollCode(code)
+    const target = extractPollTarget(clipboardContent)
+    if (target) setPollCode(target.value)
     setShowClipboardHint(false)
   }
 
@@ -86,10 +107,13 @@ export function JoinPollCard() {
   }
 
   const handleJoin = () => {
-    const code = extractPollCode(pollCode)
-    if (code) {
-      // Navigate to /poll/{code}
-      window.location.href = `/poll/${code}`
+    const target = extractPollTarget(pollCode)
+    if (target) {
+      if (target.type === "pollId") {
+        window.location.href = `/poll/${target.value}`
+      } else {
+        window.location.href = `/p/${target.value}`
+      }
     }
   }
 
@@ -100,13 +124,19 @@ export function JoinPollCard() {
   }
 
   return (
-    <div className="bg-white/85 border border-white/70 rounded-2xl p-5 space-y-4 shadow-[0_20px_45px_rgba(15,23,42,0.1)] backdrop-blur dark:bg-slate-900/80 dark:border-slate-700/60">
-      <div className="space-y-1">
-        <h3 className="font-semibold text-foreground flex items-center gap-2">
+    <div
+      className={cn(
+        "bg-white/85 border border-white/70 rounded-2xl shadow-[0_20px_45px_rgba(15,23,42,0.1)] backdrop-blur dark:bg-slate-900/80 dark:border-slate-700/60",
+        compact ? "p-3 space-y-3" : "p-5 space-y-4",
+        className,
+      )}
+    >
+      <div className={cn("space-y-1", compact && "space-y-0.5")}>
+        <h3 className={cn("font-semibold text-foreground flex items-center gap-2", compact ? "text-sm" : "")}>
           <Link2 className="w-4 h-4 text-primary" />
           {t.title}
         </h3>
-        <p className="text-sm text-muted-foreground">{t.desc}</p>
+        <p className={cn("text-sm text-muted-foreground", compact && "text-xs")}>{t.desc}</p>
       </div>
 
       {showClipboardHint && (
@@ -121,7 +151,7 @@ export function JoinPollCard() {
         </button>
       )}
 
-      <div className="flex gap-2">
+      <div className={cn("flex gap-2", compact && "gap-1.5")}>
         <Input
           ref={inputRef}
           placeholder={t.placeholder}
@@ -129,14 +159,19 @@ export function JoinPollCard() {
           onChange={handleInputChange}
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
-          className="flex-1"
+          className={cn("flex-1", compact && "h-9 text-xs")}
         />
-        <Button onClick={handleJoin} size="icon" className="shrink-0" disabled={!pollCode.trim()}>
+        <Button
+          onClick={handleJoin}
+          size="icon"
+          className={cn("shrink-0", compact && "h-9 w-9")}
+          disabled={!pollCode.trim()}
+        >
           <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
 
-      <p className="text-xs text-muted-foreground">{t.hint}</p>
+      <p className={cn("text-xs text-muted-foreground", compact && "text-[11px]")}>{t.hint}</p>
     </div>
   )
 }

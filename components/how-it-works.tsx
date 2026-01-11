@@ -11,40 +11,40 @@ export function HowItWorks() {
           {
             icon: Link2,
             step: "Step 1",
-            title: "Share the link",
-            description: "Send the poll link to your team",
+            title: "Share the link or code",
+            description: "Send the invite link or 6-digit code to your team.",
           },
           {
             icon: MousePointer2,
             step: "Step 2",
             title: "Mark availability",
-            description: "Drag to select your available times",
+            description: "Drag to paint time blocks. Drag again to erase.",
           },
           {
             icon: Trophy,
             step: "Step 3",
             title: "Best picks",
-            description: "Top 3 time slots are suggested automatically",
+            description: "We suggest the top 3 overlapping slots automatically.",
           },
         ]
       : [
           {
             icon: Link2,
             step: "Step 1",
-            title: "링크 공유",
-            description: "폴 링크를 팀원들에게 던져요",
+            title: "링크/코드 공유",
+            description: "초대 링크 또는 6자리 코드를 팀원들에게 공유해요.",
           },
           {
             icon: MousePointer2,
             step: "Step 2",
             title: "시간 체크",
-            description: "각자 가능한 시간 드래그로 선택",
+            description: "가능한 시간대를 드래그로 칠하고, 다시 드래그하면 지워져요.",
           },
           {
             icon: Trophy,
             step: "Step 3",
             title: "베스트 추천",
-            description: "자동으로 최적 시간 3개 추천",
+            description: "겹치는 시간 중 상위 3개를 자동으로 추천해요.",
           },
         ]
 

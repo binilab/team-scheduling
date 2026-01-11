@@ -1,7 +1,5 @@
 import { HeroSection } from "@/components/hero-section"
 import { HowItWorks } from "@/components/how-it-works"
-import { LivePreview } from "@/components/live-preview"
-import { JoinPollCard } from "@/components/join-poll-card"
 
 export default function HomePage() {
   return (
@@ -11,19 +9,9 @@ export default function HomePage() {
         <div className="absolute top-40 left-[-160px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.18),transparent_60%)]" />
       </div>
       <div className="container relative mx-auto px-4 py-10 lg:py-14">
-        {/* Desktop: 2-column layout, Mobile: single column */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12">
-          {/* Left Column - Main Content */}
-          <div className="space-y-8 lg:space-y-12">
-            <HeroSection />
-            <HowItWorks />
-            <LivePreview />
-          </div>
-
-          {/* Right Column - Sidebar */}
-          <aside className="space-y-6 lg:sticky lg:top-8 lg:self-start">
-            <JoinPollCard />
-          </aside>
+        <div className="space-y-8 lg:space-y-12">
+          <HeroSection />
+          <HowItWorks />
         </div>
       </div>
     </main>

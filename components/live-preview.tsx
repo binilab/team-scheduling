@@ -63,6 +63,7 @@ export function LivePreview() {
     language === "en"
       ? {
           title: "Live preview",
+          subtitle: "Sample result view with mock data.",
           progress: "2/6 responses",
           legend: "Availability count:",
           legendHelp: "Darker means more people are available.",
@@ -72,6 +73,7 @@ export function LivePreview() {
         }
       : {
           title: "라이브 미리보기",
+          subtitle: "실제 결과 화면 예시 (샘플 데이터)",
           progress: "2/6명 입력 완료",
           legend: "가능 인원 수:",
           legendHelp: "색이 진할수록 그 시간에 가능한 인원이 많아요",
@@ -104,7 +106,10 @@ export function LivePreview() {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">{t.title}</h2>
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">{t.title}</h2>
+          <p className="text-xs text-muted-foreground">{t.subtitle}</p>
+        </div>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Users className="w-4 h-4" />
           <span>{t.progress}</span>
