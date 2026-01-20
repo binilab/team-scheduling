@@ -77,7 +77,10 @@ export default function PollPage({ params }: { params: Promise<{ id: string }> }
       if (error) {
         console.error("Error fetching poll:", error)
       } else {
-        setPoll(data)
+        // 레거시 기본값(09:00~22:00)으로 저장된 경우 전체 구간으로 보정
+        const normalizedStart = data.start_time === "09:00" && data.end_time === "22:00" ? "00:00" : data.start_time || "00:00"
+        const normalizedEnd = data.start_time === "09:00" && data.end_time === "22:00" ? "24:00" : data.end_time || "24:00"
+        setPoll({ ...data, start_time: normalizedStart, end_time: normalizedEnd })
       }
       setLoading(false)
     }

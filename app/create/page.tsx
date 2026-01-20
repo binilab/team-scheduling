@@ -168,8 +168,9 @@ export default function CreatePollPage() {
             start_date: startDateUtc.toISOString(), // Date -> ISO String 변환
             end_date: endDateUtc.toISOString(),
             duration: parseInt(values.duration),
-            start_time: "09:00", // MVP라 고정 (나중에 입력 받기 가능)
-            end_time: "22:00",
+            start_time: "00:00", // 하루 전체 선택 가능
+            end_time: "24:00",
+            slot_minutes: 30,
             deadline: deadlineUtc ? deadlineUtc.toISOString() : null,
             timezone: timeZone,
           },
@@ -186,8 +187,9 @@ export default function CreatePollPage() {
               start_date: startDateUtc.toISOString(),
               end_date: endDateUtc.toISOString(),
               duration: parseInt(values.duration),
-              start_time: "09:00",
-              end_time: "22:00",
+              start_time: "00:00",
+              end_time: "24:00",
+              slot_minutes: 30,
             },
           ])
           .select()

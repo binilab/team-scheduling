@@ -142,11 +142,11 @@ export function JoinPollCard({ compact = false, className }: JoinPollCardProps) 
       {showClipboardHint && (
         <button
           onClick={handlePasteFromClipboard}
-          className="w-full flex items-center gap-2 p-2.5 bg-[linear-gradient(120deg,rgba(49,130,246,0.12),rgba(56,189,248,0.1))] hover:bg-primary/15 border border-primary/15 rounded-xl transition-colors text-left dark:border-primary/30"
+          className="w-full flex items-center gap-2 p-2.5 bg-[linear-gradient(120deg,rgba(251,191,36,0.18),rgba(249,115,22,0.15))] hover:bg-amber-100/70 border border-amber-200 rounded-xl transition-colors text-left dark:border-amber-300/40 dark:hover:bg-amber-500/20"
         >
-          <Clipboard className="w-4 h-4 text-primary shrink-0" />
+          <Clipboard className="w-4 h-4 text-amber-700 shrink-0" />
           <span className="text-sm text-foreground">
-            {t.clipboard} <span className="text-primary font-medium">{t.clipboardAction}</span>
+            {t.clipboard} <span className="text-amber-700 font-medium">{t.clipboardAction}</span>
           </span>
         </button>
       )}

@@ -86,9 +86,9 @@ export function HeroSection() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
   const [qrError, setQrError] = useState<string | null>(null)
-  const [startHour, setStartHour] = useState("10")
-  const [endHour, setEndHour] = useState("22")
-  const [slotMinutes, setSlotMinutes] = useState("30")
+  const startHour = "09"
+  const endHour = "22"
+  const slotMinutes = "30"
   const [meetingMinutes, setMeetingMinutes] = useState("60")
   const [participantLimit, setParticipantLimit] = useState("4")
   const [deadlineLocal, setDeadlineLocal] = useState("")
@@ -277,15 +277,6 @@ export function HeroSection() {
     }
   }
 
-  const parseTimeRange = (start: string, end: string) => {
-    const startHour = start.padStart(2, "0")
-    const endHour = end.padStart(2, "0")
-    return {
-      startTime: `${startHour}:00`,
-      endTime: `${endHour}:00`,
-    }
-  }
-
   const resolveUniqueCode = async () => {
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const candidate = generatePollCode()
@@ -305,16 +296,12 @@ export function HeroSection() {
       return
     }
 
-    if (Number(endHour) <= Number(startHour)) {
-      toast.error(t.timeRangeError)
-      return
-    }
-
     try {
       setIsLoading(true)
       const generatedCode = await resolveUniqueCode()
       const title = pollTitle.trim() || getAutoTitle()
-      const { startTime, endTime } = parseTimeRange(startHour, endHour)
+      const startTime = `${startHour.padStart(2, "0")}:00`
+      const endTime = `${endHour.padStart(2, "0")}:00`
       const startDateUtc = zonedTimeToUtc(
         {
           year: startDate.getFullYear(),
@@ -355,13 +342,14 @@ export function HeroSection() {
       const payloadWithCode = generatedCode ? { ...payload, code: generatedCode } : payload
       let { data, error } = await supabase
         .from("polls")
-        .insert([{ ...payloadWithCode, slot_minutes: parseInt(slotMinutes, 10) }])
+        .insert([{ ...payloadWithCode, slot_minutes: 30 }])
         .select()
         .single()
 
       if (error && /slot_minutes|deadline|timezone|code|participant_limit|column/i.test(error.message)) {
         const fallbackPayload = {
           ...payload,
+          slot_minutes: 30,
         }
         delete (fallbackPayload as { participant_limit?: number }).participant_limit
         delete (fallbackPayload as { deadline?: string | null }).deadline
@@ -381,7 +369,7 @@ export function HeroSection() {
       setPollLink(link)
       setPollCode(typeof data.code === "string" ? data.code : "")
       setCodeCopied(false)
-      localStorage.setItem(`poll:${data.id}:slotMinutes`, slotMinutes)
+      localStorage.setItem(`poll:${data.id}:slotMinutes`, "30")
       setIsCreated(true)
       toast.success(t.createSuccess)
     } catch (error) {
@@ -571,11 +559,11 @@ export function HeroSection() {
   const nextMonthDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6" id="join">
       {/* Hero Text */}
       <div className="grid grid-cols-2 gap-6 items-start">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[linear-gradient(120deg,rgba(49,130,246,0.16),rgba(56,189,248,0.12))] text-primary rounded-full text-sm font-medium border border-primary/10">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[linear-gradient(120deg,rgba(251,191,36,0.25),rgba(249,115,22,0.18))] text-amber-700 rounded-full text-sm font-medium border border-amber-200/70">
             <Sparkles className="w-4 h-4" />
             <span>{t.badge}</span>
           </div>
@@ -706,58 +694,6 @@ export function HeroSection() {
                   </div>
                 </PopoverContent>
               </Popover>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  {t.timeRangeLabel}
-                </Label>
-                <div className="grid grid-cols-2 gap-1">
-                  <Select value={startHour} onValueChange={setStartHour}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 24 }).map((_, hour) => (
-                        <SelectItem key={hour} value={String(hour)}>
-                          {String(hour).padStart(2, "0")}:00
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={endHour} onValueChange={setEndHour}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 24 }).map((_, hour) => {
-                        const display = String(hour + 1).padStart(2, "0")
-                        return (
-                          <SelectItem key={hour + 1} value={String(hour + 1)}>
-                            {display}:00
-                          </SelectItem>
-                        )
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <p className="text-xs text-muted-foreground">{t.timeRangeHint}</p>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">{t.slotLabel}</Label>
-                <Select value={slotMinutes} onValueChange={setSlotMinutes}>
-                  <SelectTrigger className="h-11">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30">30분</SelectItem>
-                    <SelectItem value="60">60분</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">{t.slotHint}</p>
-              </div>
             </div>
 
             <div className="space-y-2">

@@ -41,11 +41,6 @@ export function AuthDialog({ isOpen, onSuccess }: AuthDialogProps) {
           roleLabel: "Role",
           roleMember: "Member",
           roleLeader: "Leader / presenter",
-          weightLabel: "Weight",
-          weightHint: "Choose importance for your role.",
-          weight1: "1x (default)",
-          weight15: "1.5x (important)",
-          weight2: "2x (required)",
           submit: "Continue",
           submitting: "Joining...",
           nameRequired: "Please enter your name.",
@@ -61,11 +56,6 @@ export function AuthDialog({ isOpen, onSuccess }: AuthDialogProps) {
           roleLabel: "내 역할",
           roleMember: "일반 팀원",
           roleLeader: "팀장/발표자",
-          weightLabel: "가중치",
-          weightHint: "팀에서 중요도를 정해 가중치를 선택하세요.",
-          weight1: "1x (기본)",
-          weight15: "1.5x (중요)",
-          weight2: "2x (필수 참여)",
           submit: "시간 입력하러 가기",
           submitting: "등록 중...",
           nameRequired: "이름을 입력해주세요.",
@@ -75,7 +65,6 @@ export function AuthDialog({ isOpen, onSuccess }: AuthDialogProps) {
         }
   const [name, setName] = useState("")
   const [role, setRole] = useState("member")
-  const [weight, setWeight] = useState("1")
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
@@ -116,25 +105,10 @@ export function AuthDialog({ isOpen, onSuccess }: AuthDialogProps) {
             poll_id: pollId,
             name: name,
             role: role,
-            weight: parseFloat(weight),
           },
         ])
         .select()
         .single()
-
-      if (error && /weight|column/i.test(error.message)) {
-        ;({ data, error } = await supabase
-          .from("participants")
-          .insert([
-            {
-              poll_id: pollId,
-              name: name,
-              role: role,
-            },
-          ])
-          .select()
-          .single())
-      }
 
       if (error) throw error
 
@@ -179,22 +153,6 @@ export function AuthDialog({ isOpen, onSuccess }: AuthDialogProps) {
                 <SelectItem value="leader">{t.roleLeader}</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="weight">{t.weightLabel}</Label>
-            <Select value={weight} onValueChange={setWeight}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">{t.weight1}</SelectItem>
-                <SelectItem value="1.5">{t.weight15}</SelectItem>
-                <SelectItem value="2">{t.weight2}</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {t.weightHint}
-            </p>
           </div>
         </div>
         <Button onClick={handleSubmit} disabled={loading} className="w-full">

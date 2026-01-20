@@ -1,0 +1,27 @@
+{
+  "name": "타임폴 - 팀플 시간 조율",
+  "short_name": "타임폴",
+  "description": "대학생 팀플, 동아리, 스터디를 위한 무료 시간 조율 서비스",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3182f6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "ko-KR",
+  "dir": "ltr"
+}

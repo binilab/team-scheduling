@@ -122,8 +122,9 @@ export function Heatmap({ poll, participants, availabilities }: HeatmapProps) {
     let maxScore = 0
 
     availabilities.forEach(av => {
-      const participant = participants.find(p => p.id === av.participant_id)
-      const weight = participant?.weight ?? (participant?.role === 'leader' ? 2 : 1)
+      const participantKnown = participants.some(p => p.id === av.participant_id)
+      if (!participantKnown) return
+      const weight = 1
       const dateKey = normalizeDateKey(av.date)
       const slots = normalizeSlots(av.slots)
 

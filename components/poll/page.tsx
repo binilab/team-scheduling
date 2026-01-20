@@ -96,11 +96,11 @@ export function AuthDialog({ isOpen, onSuccess }: AuthDialogProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="member">일반 팀원</SelectItem>
-                <SelectItem value="leader">팀장/발표자 (가중치 2배)</SelectItem>
+                <SelectItem value="leader">팀장/발표자</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              팀장이나 꼭 참석해야 하는 사람은 역할을 변경해주세요.
+              역할은 표기용이며 모두 동일 가중치로 집계돼요.
             </p>
           </div>
         </div>

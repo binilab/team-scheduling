@@ -2,13 +2,21 @@
 
 # dependencies
 /node_modules
+pnpm-lock.yaml
 
 # next.js
 /.next/
 /out/
+.swc/
+.turbo/
 
 # production
 /build
+/.cache
+/dist
+/coverage
+/playwright-report
+/test-results
 
 # debug
 npm-debug.log*
@@ -22,11 +30,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# cloudflare
+.wrangler/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# ...existing code...
 
 # macOS (Mac 사용자 필수)
 .DS_Store
@@ -45,14 +54,12 @@ ehthumbs.db
 !.vscode/extensions.json
 *.code-workspace
 
-# Cloudflare (Cloudflare 배포 관련)
-.wrangler/
-.vercel
-
-
 # Supabase (CLI 사용 시)
 supabase/.temp/
 
 # Environment Variables Exception (예제 파일은 공유하도록 허용)
-! .env.example
-! .env.local.example
+!.env.example
+!.env.local.example
+
+# IDEs
+.idea/

@@ -13,8 +13,8 @@ const features = [
   },
   {
     icon: Crown,
-    title: "필수 인원 가중치",
-    description: "팀장/발표자 우선 반영",
+    title: "링크/코드 참여",
+    description: "회원가입 없이 바로 입장",
   },
 ]
 
