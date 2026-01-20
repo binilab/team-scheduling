@@ -115,6 +115,11 @@ export const metadata: Metadata = {
       "naver-site-verification": "naver32e1d9c52c1fa3855a10721e245e6de2",
     },
   },
+  appleWebApp: {
+    capable: true,
+    title: "타임폴",
+    statusBarStyle: "black-translucent",
+  },
   category: "productivity",
 }
 
@@ -188,6 +193,49 @@ export default function RootLayout({
                 url: normalizedSiteUrl,
                 logo: `${normalizedSiteUrl}/icon.svg`,
                 description: "팀플과 모임을 위한 무료 시간 조율 서비스",
+                contactPoint: {
+                  "@type": "ContactPoint",
+                  contactType: "Customer Support",
+                  url: `${normalizedSiteUrl}/support`,
+                },
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: [
+                  {
+                    "@type": "Question",
+                    name: "타임폴은 무료인가요?",
+                    acceptedAnswer: {
+                      "@type": "Answer",
+                      text: "네, 완전 무료입니다. 회원가입 없이 바로 사용할 수 있습니다.",
+                    },
+                  },
+                  {
+                    "@type": "Question",
+                    name: "When2Meet와 무엇이 다른가요?",
+                    acceptedAnswer: {
+                      "@type": "Answer",
+                      text: "타임폴은 한국어를 지원하며 더 직관적인 UI를 제공합니다. 모바일에서도 완벽하게 작동하고, 카카오톡 공유와 QR코드를 지원합니다.",
+                    },
+                  },
+                  {
+                    "@type": "Question",
+                    name: "몇 명까지 참여 가능한가요?",
+                    acceptedAnswer: {
+                      "@type": "Answer",
+                      text: "인원 제한 없이 무제한 참여 가능합니다.",
+                    },
+                  },
+                  {
+                    "@type": "Question",
+                    name: "팀플 시간 정하기는 어떻게 하나요?",
+                    acceptedAnswer: {
+                      "@type": "Answer",
+                      text: "방을 만들고 링크를 공유하면 팀원들이 가능한 시간을 선택합니다. 자동으로 겹치는 시간을 찾아 최적의 회의 시간을 추천해드립니다.",
+                    },
+                  },
+                ],
               },
             ]),
           }}
