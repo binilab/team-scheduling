@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 import { CalendarIcon, Loader2 } from "lucide-react"
+import { ko } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -296,6 +297,7 @@ export default function CreatePollPage() {
                       disabled={(date) =>
                         date < new Date(new Date().setHours(0, 0, 0, 0)) // 오늘 이전 날짜 비활성화
                       }
+                      locale={language === "en" ? undefined : ko}
                       initialFocus
                     />
                   </PopoverContent>
@@ -343,10 +345,10 @@ export default function CreatePollPage() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="30">30분</SelectItem>
-                    <SelectItem value="60">1시간</SelectItem>
-                    <SelectItem value="90">1시간 30분</SelectItem>
-                    <SelectItem value="120">2시간</SelectItem>
+                    <SelectItem value="30">{language === "en" ? "30 minutes" : "30분"}</SelectItem>
+                    <SelectItem value="60">{language === "en" ? "1 hour" : "1시간"}</SelectItem>
+                    <SelectItem value="90">{language === "en" ? "1 hour 30 minutes" : "1시간 30분"}</SelectItem>
+                    <SelectItem value="120">{language === "en" ? "2 hours" : "2시간"}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>{t.durationHint}</FormDescription>
