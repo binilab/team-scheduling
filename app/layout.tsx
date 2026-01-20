@@ -61,6 +61,9 @@ export const metadata: Metadata = {
       { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/icon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/icon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/favicon-64.png", sizes: "64x64", type: "image/png" },
+      { url: "/favicon-96.png", sizes: "96x96", type: "image/png" },
     ],
     apple: "/apple-icon.png",
   },
@@ -160,6 +163,12 @@ export default function RootLayout({
             ]),
           }}
         />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+        <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
       </head>
       <body className="font-sans antialiased min-h-screen flex flex-col">
         <AppProviders>
