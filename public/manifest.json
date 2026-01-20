@@ -1,6 +1,6 @@
 {
-  "name": "타임폴 - 팀플 시간 조율",
-  "short_name": "타임폴",
+  "name": "우리의시간 - 팀플 시간 조율",
+  "short_name": "우리의시간",
   "description": "대학생 팀플, 동아리, 스터디를 위한 무료 시간 조율 서비스",
   "start_url": "/",
   "display": "standalone",

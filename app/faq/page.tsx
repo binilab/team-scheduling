@@ -19,8 +19,8 @@ const faqCategories = {
       category: "기본 사용법",
       items: [
         {
-          q: "타임폴은 무료인가요?",
-          a: "네, 타임폴은 완전 무료입니다. 광고도 없고, 숨겨진 비용도 없어요. 마음껏 사용하세요!",
+          q: "우리의시간은 무료인가요?",
+          a: "네, 우리의시간은 완전 무료입니다. 광고도 없고, 숨겨진 비용도 없어요. 마음껏 사용하세요!",
         },
         {
           q: "회원가입이 필요한가요?",
@@ -101,8 +101,8 @@ const faqCategories = {
       category: "Getting Started",
       items: [
         {
-          q: "Is TimePoll free?",
-          a: "Yes, TimePoll is completely free. No ads, no hidden costs. Use it as much as you want!",
+          q: "Is OurTime free?",
+          a: "Yes, OurTime is completely free. No ads, no hidden costs. Use it as much as you want!",
         },
         {
           q: "Do I need to sign up?",
@@ -214,8 +214,8 @@ export default function FAQPage() {
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             {isEn
-              ? "Find answers to common questions about TimePoll"
-              : "타임폴에 대해 궁금한 점을 찾아보세요"}
+              ? "Find answers to common questions about OurTime"
+              : "우리의시간에 대해 궁금한 점을 찾아보세요"}
           </p>
         </div>
 
@@ -274,7 +274,7 @@ export default function FAQPage() {
           </p>
           <Button size="lg" className="gap-2" asChild>
             <Link href="/create">
-              {isEn ? "Try TimePoll Now" : "타임폴 바로 사용해보기"}
+              {isEn ? "Try OurTime Now" : "우리의시간 바로 사용해보기"}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>

@@ -45,7 +45,7 @@ export default function AdminPage() {
   const [polls, setPolls] = useState<PollRow[]>([])
 
   useEffect(() => {
-    const saved = typeof window !== "undefined" ? localStorage.getItem("timepoll:adminToken") : null
+    const saved = typeof window !== "undefined" ? localStorage.getItem("ourstime:adminToken") : null
     if (saved) {
       setToken(saved)
       setAuthed(true)
@@ -72,7 +72,7 @@ export default function AdminPage() {
         setAuthError("관리자 키가 올바르지 않습니다. 다시 입력해주세요.")
         setAuthed(false)
         setToken("")
-        localStorage.removeItem("timepoll:adminToken")
+        localStorage.removeItem("ourstime:adminToken")
         toast.error("관리자 키가 올바르지 않습니다. 다시 입력해주세요.")
         return
       }
@@ -97,7 +97,7 @@ export default function AdminPage() {
       return
     }
     setAuthError("")
-    localStorage.setItem("timepoll:adminToken", token.trim())
+    localStorage.setItem("ourstime:adminToken", token.trim())
     setAuthed(true)
     toast.success("관리자 모드가 활성화되었습니다.")
   }

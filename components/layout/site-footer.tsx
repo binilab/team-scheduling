@@ -65,7 +65,7 @@ export function SiteFooter() {
                 <Clock className="h-4 w-4 text-primary-foreground" />
               </div>
               <div>
-                <span className="text-lg font-bold">{isEn ? "TimePoll" : "타임폴"}</span>
+                <span className="text-lg font-bold">{isEn ? "OurTime" : "우리의시간"}</span>
                 <p className="text-xs text-muted-foreground">
                   {isEn ? "Plan faster, meet smarter" : "더 빠르게 모이고, 똑똑하게 시간 맞추기"}
                 </p>
@@ -111,7 +111,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-8 pt-6 border-t text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} TimePoll. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} OurTime. All rights reserved.</p>
         </div>
       </div>
     </footer>

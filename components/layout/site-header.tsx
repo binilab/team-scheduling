@@ -51,7 +51,7 @@ export function SiteHeader() {
             <Clock className="h-4 w-4 text-white" />
           </div>
           <span className="text-lg font-bold">
-            {isEn ? "TimePoll" : "타임폴"}
+            {isEn ? "OurTime" : "우리의시간"}
           </span>
         </Link>
 

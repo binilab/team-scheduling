@@ -14,11 +14,11 @@ const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
 // SEO 최적화된 메타데이터
 export const metadata: Metadata = {
   title: {
-    default: "타임폴 - 무료 팀플 시간표, 스케줄 조절 & 회의 시간 관리 서비스",
-    template: "%s | 타임폴 - 스케줄 조절",
+    default: "우리의시간 - 무료 팀플 시간표, 스케줄 조절 & 회의 시간 관리 서비스",
+    template: "%s | 우리의시간 - 스케줄 조절",
   },
   description:
-    "대학생 팀플, 동아리, 스터디 모임을 위한 무료 스케줄 조절 서비스입니다. 복잡한 팀 시간 관리와 회의 시간 정하기를 타임폴로 1분 만에 해결하세요. 회원가입 없이 링크 공유만으로 팀원들의 가능한 시간을 쉽게 모으고 최적의 미팅 시간을 찾아보세요.",
+    "대학생 팀플, 동아리, 스터디 모임을 위한 무료 스케줄 조절 서비스입니다. 복잡한 팀 시간 관리와 회의 시간 정하기를 우리의시간으로 1분 만에 해결하세요. 회원가입 없이 링크 공유만으로 팀원들의 가능한 시간을 쉽게 모으고 최적의 미팅 시간을 찾아보세요.",
   keywords: [
     "팀플 시간",
     "스케줄 조절",
@@ -46,10 +46,10 @@ export const metadata: Metadata = {
     "meeting scheduler",
     "poll scheduler",
   ],
-  authors: [{ name: "TimePoll Team", url: "https://ourstime.com" }],
-  creator: "TimePoll",
-  publisher: "TimePoll",
-  applicationName: "타임폴 (TimePoll)",
+  authors: [{ name: "OurTime Team", url: "https://ourstime.com" }],
+  creator: "OurTime",
+  publisher: "OurTime",
+  applicationName: "우리의시간 (OurTime)",
   robots: {
     index: true,
     follow: true,
@@ -87,8 +87,8 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     alternateLocale: "en_US",
     url: normalizedSiteUrl,
-    siteName: "타임폴 (TimePoll)",
-    title: "타임폴 - 가장 쉬운 팀플 시간표 & 스케줄 조절 서비스",
+    siteName: "우리의시간 (OurTime)",
+    title: "우리의시간 - 가장 쉬운 팀플 시간표 & 스케줄 조절 서비스",
     description:
       "로그인 없이 바로 시작하는 무료 팀 스케줄 조절. 대학생 팀플, 동아리, 스터디 모임 시간을 1분 만에 정리하세요. 복잡한 회의 시간 정하기와 일정 조율을 링크 하나로 끝!",
     images: [
@@ -96,18 +96,18 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "타임폴 - 무료 팀플 시간 조절 및 스케줄 관리 서비스",
+        alt: "우리의시간 - 무료 팀플 시간 조절 및 스케줄 관리 서비스",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "타임폴 - 무료 팀플 시간표 & 스케줄 조절",
+    title: "우리의시간 - 무료 팀플 시간표 & 스케줄 조절",
     description:
       "복잡한 팀 시간 관리와 회의 일정 조율, 링크 하나로 1분 만에 해결하세요. 대학생 팀플, 동아리, 스터디 모임을 위한 무료 스케줄러.",
     images: ["/og-image.png"],
-    creator: "@timepoll",
-    site: "@timepoll",
+    creator: "@ourstime",
+    site: "@ourstime",
   },
   verification: {
     google: googleSiteVerification || undefined,
@@ -117,7 +117,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "타임폴",
+    title: "우리의시간",
     statusBarStyle: "black-translucent",
   },
   category: "productivity",
@@ -150,8 +150,8 @@ export default function RootLayout({
               {
                 "@context": "https://schema.org",
                 "@type": "SoftwareApplication",
-                name: "타임폴 (TimePoll)",
-                alternateName: ["TimePoll", "타임폴", "팀플 시간 조율"],
+                name: "우리의시간 (OurTime)",
+                alternateName: ["OurTime", "우리의시간", "팀플 시간 조율"],
                 description:
                   "대학생 팀플, 동아리, 스터디 모임을 위한 무료 스케줄 조절 및 시간 관리 서비스입니다. 복잡한 팀 시간표 작성과 회의 시간 정하기를 1분 만에 해결하세요.",
                 url: normalizedSiteUrl,
@@ -188,8 +188,8 @@ export default function RootLayout({
               {
                 "@context": "https://schema.org",
                 "@type": "Organization",
-                name: "타임폴",
-                alternateName: "TimePoll",
+                name: "우리의시간",
+                alternateName: "OurTime",
                 url: normalizedSiteUrl,
                 logo: `${normalizedSiteUrl}/icon.svg`,
                 description: "팀플과 모임을 위한 무료 시간 조율 서비스",
@@ -205,7 +205,7 @@ export default function RootLayout({
                 mainEntity: [
                   {
                     "@type": "Question",
-                    name: "타임폴은 무료인가요?",
+                    name: "우리의시간은 무료인가요?",
                     acceptedAnswer: {
                       "@type": "Answer",
                       text: "네, 완전 무료입니다. 회원가입 없이 바로 사용할 수 있습니다.",
@@ -216,7 +216,7 @@ export default function RootLayout({
                     name: "When2Meet와 무엇이 다른가요?",
                     acceptedAnswer: {
                       "@type": "Answer",
-                      text: "타임폴은 한국어를 지원하며 더 직관적인 UI를 제공합니다. 모바일에서도 완벽하게 작동하고, 카카오톡 공유와 QR코드를 지원합니다.",
+                      text: "우리의시간은 한국어를 지원하며 더 직관적인 UI를 제공합니다. 모바일에서도 완벽하게 작동하고, 카카오톡 공유와 QR코드를 지원합니다.",
                     },
                   },
                   {

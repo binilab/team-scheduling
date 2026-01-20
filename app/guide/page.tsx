@@ -151,7 +151,7 @@ export default function GuidePage() {
             {isEn ? "Quick Start Guide" : "빠른 시작 가이드"}
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
-            {isEn ? "How to Use TimePoll" : "타임폴 사용법"}
+            {isEn ? "How to Use OurTime" : "우리의시간 사용법"}
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             {isEn

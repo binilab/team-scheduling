@@ -418,7 +418,7 @@ export function HeroSection() {
       Kakao.Share.sendDefault({
         objectType: "feed",
         content: {
-          title: language === "en" ? "Timepoll invite" : "타임폴 초대",
+          title: language === "en" ? "OurTime invite" : "우리의시간 초대",
           description:
             language === "en"
               ? "Pick your availability and find the best time."
