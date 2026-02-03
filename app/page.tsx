@@ -36,6 +36,11 @@ export default function HomePage() {
               <br />
               {isEn ? "Make your team schedule in minutes." : "우리 팀만의 시간표를 가장 빠르게 만들어요."}
             </p>
+            <p className="text-sm text-muted-foreground max-w-3xl mx-auto">
+              {isEn
+                ? "OurTime is a free team scheduling tool for university projects, clubs, and study groups. Create a meeting time poll, share a link, and find the best overlapping time slots without signup."
+                : "우리시간은 팀플·동아리·스터디를 위한 무료 일정 조율 서비스입니다. 회의 시간 투표를 만들고 링크를 공유하면 겹치는 시간을 자동으로 추천받을 수 있어요."}
+            </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Button asChild className="gap-2">
                 <Link href="/create">
@@ -46,6 +51,17 @@ export default function HomePage() {
               <Button asChild variant="outline">
                 <Link href="/join">{isEn ? "Join with code" : "코드로 참여하기"}</Link>
               </Button>
+            </div>
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+              <Link href="/guide" className="hover:text-foreground">
+                {isEn ? "Usage guide" : "사용 가이드"}
+              </Link>
+              <Link href="/faq" className="hover:text-foreground">
+                {isEn ? "FAQ" : "자주 묻는 질문"}
+              </Link>
+              <Link href="/support" className="hover:text-foreground">
+                {isEn ? "Support" : "문의하기"}
+              </Link>
             </div>
           </section>
 

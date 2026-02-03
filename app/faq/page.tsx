@@ -237,6 +237,22 @@ export default function FAQPage() {
               ? "Find answers to common questions about OurTime"
               : "우리시간에 대해 궁금한 점을 찾아보세요"}
           </p>
+          <p className="text-sm text-muted-foreground max-w-3xl mx-auto">
+            {isEn
+              ? "OurTime is a free team scheduling tool for university projects, clubs, and study groups. Explore questions about meeting time polls and availability sharing."
+              : "우리시간은 팀플·동아리·스터디를 위한 무료 일정 조율 서비스입니다. 회의 시간 투표와 참여 방법을 확인해보세요."}
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+            <Link href="/" className="hover:text-foreground">
+              {isEn ? "Home" : "홈"}
+            </Link>
+            <Link href="/guide" className="hover:text-foreground">
+              {isEn ? "Usage guide" : "사용 가이드"}
+            </Link>
+            <Link href="/support" className="hover:text-foreground">
+              {isEn ? "Support" : "문의하기"}
+            </Link>
+          </div>
         </div>
 
         {/* 검색 */}

@@ -158,6 +158,22 @@ export default function GuidePage() {
               ? "Create a team schedule in just 4 simple steps. No signup required!"
               : "4단계로 팀 일정을 쉽게 조율하세요. 회원가입 없이 바로 시작!"}
           </p>
+          <p className="text-sm text-muted-foreground max-w-3xl mx-auto">
+            {isEn
+              ? "This guide explains how to create a meeting time poll, share the link, and collect availability for team projects, clubs, and study groups."
+              : "팀플·동아리·스터디 일정 조율을 위해 투표 만들기, 링크 공유, 가능 시간 체크 방법을 안내합니다."}
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+            <Link href="/" className="hover:text-foreground">
+              {isEn ? "Home" : "홈"}
+            </Link>
+            <Link href="/faq" className="hover:text-foreground">
+              {isEn ? "FAQ" : "자주 묻는 질문"}
+            </Link>
+            <Link href="/support" className="hover:text-foreground">
+              {isEn ? "Support" : "문의하기"}
+            </Link>
+          </div>
         </div>
 
         {/* 스텝 카드들 */}
