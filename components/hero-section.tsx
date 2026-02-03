@@ -418,7 +418,7 @@ export function HeroSection() {
       Kakao.Share.sendDefault({
         objectType: "feed",
         content: {
-          title: language === "en" ? "OurTime invite" : "우리의시간 초대",
+          title: language === "en" ? "OurTime invite" : "우리시간 초대",
           description:
             language === "en"
               ? "Pick your availability and find the best time."
@@ -570,7 +570,7 @@ export function HeroSection() {
           <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight text-foreground text-balance">
             {t.headlineTop}
             <br />
-            <span className="text-primary">{t.headlineHighlight}</span> {t.headlineBottom}
+            <span className="text-amber-600">{t.headlineHighlight}</span> {t.headlineBottom}
           </h1>
           <p className="text-lg text-muted-foreground max-w-lg">
             {t.subcopy}

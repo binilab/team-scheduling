@@ -14,11 +14,11 @@ const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
 // SEO 최적화된 메타데이터
 export const metadata: Metadata = {
   title: {
-    default: "우리의시간 - 무료 팀플 시간표, 스케줄 조절 & 회의 시간 관리 서비스",
-    template: "%s | 우리의시간 - 스케줄 조절",
+    default: "우리시간 - 무료 팀플 시간표, 스케줄 조절 & 회의 시간 관리 서비스",
+    template: "%s | 우리시간 - 스케줄 조절",
   },
   description:
-    "대학생 팀플, 동아리, 스터디 모임을 위한 무료 스케줄 조절 서비스입니다. 복잡한 팀 시간 관리와 회의 시간 정하기를 우리의시간으로 1분 만에 해결하세요. Free team scheduling tool for students - find the best meeting time in 1 minute. No signup required.",
+    "대학생 팀플, 동아리, 스터디 모임을 위한 무료 스케줄 조절 서비스입니다. 복잡한 팀 시간 관리와 회의 시간 정하기를 우리시간으로 1분 만에 해결하세요. Free team scheduling tool for students - find the best meeting time in 1 minute. No signup required.",
   keywords: [
     // 한국어 키워드
     "팀플 시간",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
   authors: [{ name: "OurTime Team", url: "https://ourstime.com" }],
   creator: "OurTime",
   publisher: "OurTime",
-  applicationName: "우리의시간 (OurTime)",
+  applicationName: "우리시간 (OurTime)",
   robots: {
     index: true,
     follow: true,
@@ -91,12 +91,13 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/icon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/icon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
       { url: "/favicon-64.png", sizes: "64x64", type: "image/png" },
       { url: "/favicon-96.png", sizes: "96x96", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: "/apple-icon.png",
   },
@@ -106,25 +107,25 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     alternateLocale: "en_US",
     url: normalizedSiteUrl,
-    siteName: "우리의시간 (OurTime)",
-    title: "우리의시간 - 가장 쉬운 팀플 시간표 & 스케줄 조절 서비스 | Free Meeting Scheduler",
+    siteName: "우리시간 (OurTime)",
+    title: "우리시간 - 가장 쉬운 팀플 시간표 & 스케줄 조절 서비스 | Free Meeting Scheduler",
     description:
       "로그인 없이 바로 시작하는 무료 팀 스케줄 조절. 대학생 팀플, 동아리, 스터디 모임 시간을 1분 만에 정리하세요. Free team scheduling - find the best meeting time without signup!",
     images: [
       {
-        url: "/og-image.png",
+        url: `${normalizedSiteUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "우리의시간 - 무료 팀플 시간 조절 및 스케줄 관리 서비스",
+        alt: "우리시간 - 무료 팀플 시간 조절 및 스케줄 관리 서비스",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "우리의시간 - Free Team Meeting Scheduler | 무료 팀플 시간표",
+    title: "우리시간 - Free Team Meeting Scheduler | 무료 팀플 시간표",
     description:
       "Find the best meeting time in 1 minute. 복잡한 팀 시간 관리와 회의 일정 조율, 링크 하나로 해결하세요. Free, no signup required.",
-    images: ["/og-image.png"],
+    images: [`${normalizedSiteUrl}/og-image.png`],
     creator: "@ourstime",
     site: "@ourstime",
   },
@@ -136,7 +137,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "우리의시간",
+    title: "우리시간",
     statusBarStyle: "black-translucent",
   },
   category: "productivity",
@@ -169,8 +170,8 @@ export default function RootLayout({
               {
                 "@context": "https://schema.org",
                 "@type": "SoftwareApplication",
-                name: "우리의시간 (OurTime)",
-                alternateName: ["OurTime", "우리의시간", "팀플 시간 조율", "Free Meeting Scheduler"],
+                name: "우리시간 (OurTime)",
+                alternateName: ["OurTime", "우리시간", "팀플 시간 조율", "Free Meeting Scheduler"],
                 description:
                   "Free team scheduling tool for students, clubs, and study groups. Find the best meeting time in 1 minute without signup. 대학생 팀플, 동아리, 스터디 모임을 위한 무료 스케줄 조절 서비스.",
                 url: normalizedSiteUrl,
@@ -208,7 +209,7 @@ export default function RootLayout({
               {
                 "@context": "https://schema.org",
                 "@type": "Organization",
-                name: "우리의시간",
+                name: "우리시간",
                 alternateName: ["OurTime", "Free Meeting Scheduler"],
                 url: normalizedSiteUrl,
                 logo: `${normalizedSiteUrl}/icon.svg`,
@@ -225,7 +226,7 @@ export default function RootLayout({
                 mainEntity: [
                   {
                     "@type": "Question",
-                    name: "우리의시간은 무료인가요?",
+                    name: "우리시간은 무료인가요?",
                     acceptedAnswer: {
                       "@type": "Answer",
                       text: "네, 완전 무료입니다. 회원가입 없이 바로 사용할 수 있습니다.",
@@ -236,7 +237,7 @@ export default function RootLayout({
                     name: "When2Meet와 무엇이 다른가요?",
                     acceptedAnswer: {
                       "@type": "Answer",
-                      text: "우리의시간은 한국어를 지원하며 더 직관적인 UI를 제공합니다. 모바일에서도 완벽하게 작동하고, 카카오톡 공유와 QR코드를 지원합니다.",
+                      text: "우리시간은 한국어를 지원하며 더 직관적인 UI를 제공합니다. 모바일에서도 완벽하게 작동하고, 카카오톡 공유와 QR코드를 지원합니다.",
                     },
                   },
                   {

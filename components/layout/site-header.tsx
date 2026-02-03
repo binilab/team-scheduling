@@ -51,7 +51,7 @@ export function SiteHeader() {
             <Clock className="h-4 w-4 text-white" />
           </div>
           <span className="text-lg font-bold">
-            {isEn ? "OurTime" : "우리의시간"}
+            {isEn ? "OurTime" : "우리시간"}
           </span>
         </Link>
 
@@ -64,7 +64,7 @@ export function SiteHeader() {
               className={cn(
                 "px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                 isActive(item.href)
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-amber-100 text-amber-700"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
@@ -141,7 +141,7 @@ export function SiteHeader() {
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
                       isActive(item.href)
-                        ? "bg-primary/10 text-primary"
+                        ? "bg-amber-100 text-amber-700"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >

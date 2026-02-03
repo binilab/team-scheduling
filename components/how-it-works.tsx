@@ -1,6 +1,6 @@
 "use client"
 
-import { Link2, MousePointer2, Trophy, ArrowRight } from "lucide-react"
+import { Sparkles, Share2, MousePointer2, CheckCircle2, ArrowRight } from "lucide-react"
 import { useAppSettings } from "@/components/app-providers"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -12,42 +12,54 @@ export function HowItWorks() {
   const steps = isEn
     ? [
         {
-          icon: Link2,
+          icon: Sparkles,
           step: "01",
+          title: "Create a poll",
+          description: "Set the title, date range, and time slots.",
+        },
+        {
+          icon: Share2,
+          step: "02",
           title: "Share the link",
           description: "Send the invite link or 6-digit code to your team.",
         },
         {
           icon: MousePointer2,
-          step: "02",
-          title: "Mark availability",
-          description: "Drag to paint time blocks. Drag again to erase.",
+          step: "03",
+          title: "Select times",
+          description: "Team members drag to mark availability.",
         },
         {
-          icon: Trophy,
-          step: "03",
-          title: "Get best times",
-          description: "We suggest the top 3 overlapping slots automatically.",
+          icon: CheckCircle2,
+          step: "04",
+          title: "View results",
+          description: "We suggest the top overlapping time slots.",
         },
       ]
     : [
         {
-          icon: Link2,
+          icon: Sparkles,
           step: "01",
-          title: "링크 공유",
-          description: "초대 링크 또는 6자리 코드를 팀원들에게 공유해요.",
+          title: "투표 만들기",
+          description: "제목, 날짜 범위, 시간대를 설정해요.",
+        },
+        {
+          icon: Share2,
+          step: "02",
+          title: "링크 공유하기",
+          description: "초대 링크 또는 6자리 코드를 공유해요.",
         },
         {
           icon: MousePointer2,
-          step: "02",
-          title: "시간 체크",
-          description: "가능한 시간대를 드래그로 칠하고, 다시 드래그하면 지워요.",
+          step: "03",
+          title: "시간 선택하기",
+          description: "팀원들이 가능한 시간을 드래그로 선택해요.",
         },
         {
-          icon: Trophy,
-          step: "03",
-          title: "베스트 추천",
-          description: "겹치는 시간 중 상위 3개를 자동으로 추천해요.",
+          icon: CheckCircle2,
+          step: "04",
+          title: "결과 확인하기",
+          description: "겹치는 시간 중 베스트를 추천해요.",
         },
       ]
 
@@ -70,7 +82,7 @@ export function HowItWorks() {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {steps.map((step, index) => (
           <div
             key={index}

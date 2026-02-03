@@ -3,6 +3,9 @@
 # dependencies
 /node_modules
 pnpm-lock.yaml
+/.conda/
+__pycache__/
+*.pyc
 
 # next.js
 /.next/

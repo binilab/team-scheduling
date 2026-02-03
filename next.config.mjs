@@ -6,6 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  outputFileTracingRoot: "/Users/wonbin/workspace/team-scheduling",
 }
 
 export default nextConfig

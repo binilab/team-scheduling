@@ -1,7 +1,15 @@
-import { HeroSection } from "@/components/hero-section"
+"use client"
+
+import Link from "next/link"
 import { HowItWorks } from "@/components/how-it-works"
+import { Button } from "@/components/ui/button"
+import { Sparkles, ArrowRight } from "lucide-react"
+import { useAppSettings } from "@/components/app-providers"
 
 export default function HomePage() {
+  const { language } = useAppSettings()
+  const isEn = language === "en"
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-background via-background to-muted/30">
       {/* 배경 그라데이션 효과 */}
@@ -11,12 +19,36 @@ export default function HomePage() {
         <div className="absolute bottom-10 right-[-120px] h-72 w-72 rounded-full bg-[radial-gradient(circle_at_center,rgba(217,119,6,0.1),transparent_60%)]" />
       </div>
 
-      <div className="container relative mx-auto px-4 py-8 lg:py-12">
+      <div className="container relative mx-auto px-4 py-10 lg:py-14">
         <div className="space-y-12 lg:space-y-16">
-          {/* 히어로 섹션 */}
-          <HeroSection />
+          <section className="space-y-6 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-200/70 bg-amber-100/60 px-3 py-1.5 text-sm font-medium text-amber-700">
+              <Sparkles className="h-4 w-4" />
+              {isEn ? "Start without signup" : "가입 없이 바로 시작"}
+            </div>
+            <h1 className="text-3xl lg:text-5xl font-semibold tracking-tight text-foreground text-balance">
+              {isEn ? "Tired of finding a time?" : "시간 맞추기 귀찮을 땐"}
+              <br />
+              {isEn ? "Come here." : "여기로!"}
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              {isEn ? "From scheduling to sharing in one place." : "시간 조율부터 공유까지 한 번에."}
+              <br />
+              {isEn ? "Make your team schedule in minutes." : "우리 팀만의 시간표를 가장 빠르게 만들어요."}
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button asChild className="gap-2">
+                <Link href="/create">
+                  {isEn ? "Create poll" : "일정 만들기"}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/join">{isEn ? "Join with code" : "코드로 참여하기"}</Link>
+              </Button>
+            </div>
+          </section>
 
-          {/* 사용 방법 섹션 */}
           <HowItWorks />
         </div>
       </div>

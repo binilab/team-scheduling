@@ -132,8 +132,8 @@ export function JoinPollCard({ compact = false, className }: JoinPollCardProps) 
       )}
     >
       <div className={cn("space-y-1", compact && "space-y-0.5")}>
-        <h3 className={cn("font-semibold text-foreground flex items-center gap-2", compact ? "text-sm" : "")}>
-          <Link2 className="w-4 h-4 text-primary" />
+        <h3 className={cn("font-semibold text-foreground flex items-center gap-2", compact ? "text-sm" : "")}> 
+          <Link2 className="w-4 h-4 text-amber-600" />
           {t.title}
         </h3>
         <p className={cn("text-sm text-muted-foreground", compact && "text-xs")}>{t.desc}</p>
@@ -164,7 +164,7 @@ export function JoinPollCard({ compact = false, className }: JoinPollCardProps) 
         <Button
           onClick={handleJoin}
           size="icon"
-          className={cn("shrink-0", compact && "h-9 w-9")}
+          className={cn("shrink-0 bg-amber-500 text-white hover:bg-amber-600", compact && "h-9 w-9")}
           disabled={!pollCode.trim()}
         >
           <ArrowRight className="w-4 h-4" />

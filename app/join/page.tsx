@@ -1,6 +1,12 @@
+"use client"
+
 import { JoinPollCard } from "@/components/join-poll-card"
+import { useAppSettings } from "@/components/app-providers"
 
 export default function JoinPage() {
+  const { language } = useAppSettings()
+  const isEn = language === "en"
+
   return (
     <main className="relative min-h-screen bg-gradient-to-b from-amber-50 via-background to-white dark:from-[#1f1b14] dark:via-background dark:to-[#111]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -12,11 +18,15 @@ export default function JoinPage() {
         <div className="w-full max-w-xl space-y-6">
           <div className="space-y-2 text-center">
             <p className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-              링크/코드로 바로 참여
+              {isEn ? "Join instantly with link/code" : "링크/코드로 바로 참여"}
             </p>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">투표 참여하기</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              {isEn ? "Join a poll" : "투표 참여하기"}
+            </h1>
             <p className="text-muted-foreground text-sm">
-              받은 링크나 6자리 코드를 입력하면 바로 참여할 수 있어요.
+              {isEn
+                ? "Paste the invite link or 6-digit code to join right away."
+                : "받은 링크나 6자리 코드를 입력하면 바로 참여할 수 있어요."}
             </p>
           </div>
 
