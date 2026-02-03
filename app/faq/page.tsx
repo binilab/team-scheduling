@@ -184,7 +184,23 @@ export default function FAQPage() {
   const { language } = useAppSettings()
   const isEn = language === "en"
   const categories = isEn ? faqCategories.en : faqCategories.ko
+  const schemaCategories = categories
   const [search, setSearch] = useState("")
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: schemaCategories.flatMap((category) =>
+      category.items.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.a,
+        },
+      })),
+    ),
+  }
 
   const filteredCategories = useMemo(() => {
     if (!search.trim()) return categories
@@ -202,6 +218,10 @@ export default function FAQPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <div className="container mx-auto px-4 py-12 lg:py-16">
         {/* 헤더 */}
         <div className="text-center space-y-4 mb-10">
